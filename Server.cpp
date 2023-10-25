@@ -1,6 +1,6 @@
 #include "Server.hpp"
 
-Server::Server(const std::string &port, const std::string &pwd) : _port(port), _pwd(pwd)
+Server::Server(const std::string &port, const std::string &psw) : _port(portConverter(port)), _psw(psw), _isPassword(psw.compare("") != 0)
 {
 
 }
@@ -13,8 +13,8 @@ void	Server::run()
 {
 	int serverSocket, newSocket;
 	struct sockaddr_in serverAddr, newAddr;
-	// socklen_t addrSize;
-	// char buffer[1024];
+	socklen_t addrSize;
+	//char buffer[1024];
 
 	serverSocket = socket(AF_INET, SOCK_STREAM, 0);
 	serverAddr.sin_family = AF_INET;
@@ -25,5 +25,39 @@ void	Server::run()
 	listen(serverSocket, MAX_QUEUE_CONN);
 
 	std::cout << "Server is listening on port " << this->_port << "..." << std::endl;
-	
+
+	int epoll_fd = epoll_create1(0); // Create an epoll instance
+	struct epoll_event arrEvent[10]; // Create an event array to store events
+
+	struct epoll_event event;
+	event.events = EPOLLIN; // Monitor read events
+	event.data.fd = serverSocket;
+
+	epoll_ctl(epoll_fd, EPOLL_CTL_ADD, serverSocket, &event); // Add the server socket to the epoll
+
+	while (true) {
+		int ready_fds = epoll_wait(epoll_fd, arrEvent, 10, -1); // Wait for events
+
+		for (int i = 0; i < ready_fds; ++i) {
+			if (arrEvent[i].data.fd == serverSocket) {
+				newSocket = accept(serverSocket, (struct sockaddr*)&newAddr, &addrSize);
+				event.data.fd = newSocket;
+				event.events = EPOLLIN; // Monitor read events for the new socket
+				epoll_ctl(epoll_fd, EPOLL_CTL_ADD, newSocket, &event);
+				std::cout << "Connection established with a client." << std::endl;
+			} else {
+				// int clientSocket = arrEvent[i].data.fd;
+				// memset(buffer, 0, sizeof(buffer));
+				// int bytesReceived = recv(clientSocket, buffer, sizeof(buffer), 0);
+				// if (bytesReceived <= 0) {
+				//     epoll_ctl(epoll_fd, EPOLL_CTL_DEL, clientSocket, NULL);
+				//     close(clientSocket);
+				//     std::cout << "Client disconnected." << std::endl;
+				// } else {
+				//     std::cout << "Client: " << buffer << std::endl;
+				//     send(clientSocket, buffer, bytesReceived, 0);
+			}
+		}
+	}
+	close(serverSocket);
 }

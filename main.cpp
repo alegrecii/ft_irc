@@ -1,8 +1,8 @@
-#include "Utils.hpp"
+#include "utils.hpp"
 
 int	main(int ac, char **av)
 {
-	if (ac != 3)
+	if (ac != 3 && ac != 2)
 	{
 		std::cerr << "Insert correct arguments!" << std::endl;
 		return 1;
@@ -11,7 +11,12 @@ int	main(int ac, char **av)
 	{
 		try
 		{
-			Server server(av[1], av[2]);
+			std::string psw;
+			if (ac == 3)
+				psw = av[2];
+			else
+				psw = "";
+			Server server(av[1], psw);
 			server.run();
 		}
 		catch(const std::exception& e)

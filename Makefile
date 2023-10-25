@@ -6,12 +6,12 @@
 #    By: mdi-paol <marvin@42.fr>                    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2023/07/06 14:39:03 by mdi-paol          #+#    #+#              #
-#    Updated: 2023/09/27 19:10:29 by mdi-paol         ###   ########.fr        #
+#    Updated: 2023/10/25 14:19:07 by mdi-paol         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
-NAME = btc
-SRCS = main.cpp BitcoinExchange.cpp
+NAME = ft_irc
+SRCS = main.cpp Server.cpp utils.cpp
 FLAGS = -Wall -Werror -Wextra -std=c++98
 OBJS = $(SRCS:.cpp=.o)
 CC = c++
