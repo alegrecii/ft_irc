@@ -14,7 +14,7 @@ void	Server::run()
 	int serverSocket, newSocket;
 	struct sockaddr_in serverAddr, newAddr;
 	socklen_t addrSize;
-	char buffer[1024];
+	char buffer[512];
 
 	serverSocket = socket(AF_INET, SOCK_STREAM, 0);
 	serverAddr.sin_family = AF_INET;
@@ -36,19 +36,21 @@ void	Server::run()
 
 	struct epoll_event arrEvent[MAX_CLIENT]; // Create an event array to store events
 
-	while (true) 
+	while (true)
 	{
 		int ready_fds = epoll_wait(epoll_fd, arrEvent, MAX_CLIENT, -1); // Wait for events
 
-		for (int i = 0; i < ready_fds; ++i) 
+		for (int i = 0; i < ready_fds; ++i)
 		{
-			if (arrEvent[i].data.fd == serverSocket) 
+			if (arrEvent[i].data.fd == serverSocket)
 			{
 				newSocket = accept(serverSocket, (struct sockaddr*)&newAddr, &addrSize);
 				event.data.fd = newSocket;
 				event.events = EPOLLIN; // Monitor read events for the new socket
 				epoll_ctl(epoll_fd, EPOLL_CTL_ADD, newSocket, &event);
 				std::cout << "Connection established with a client." << std::endl;
+				Client tmp;
+				_clients[newSocket] = tmp;
 			}
 			else
 			{
@@ -57,17 +59,40 @@ void	Server::run()
 				int bytesReceived = recv(clientSocket, buffer, sizeof(buffer), 0);
 				if (bytesReceived <= 0)
 				{
-				    epoll_ctl(epoll_fd, EPOLL_CTL_DEL, clientSocket, NULL);
-				    close(clientSocket);
-				    std::cout << "Client disconnected." << std::endl;
+					epoll_ctl(epoll_fd, EPOLL_CTL_DEL, clientSocket, NULL);
+					close(clientSocket);
+					std::cout << "Client disconnected." << std::endl;
 				}
 				else
 				{
-				    std::cout << "Client: " << buffer << std::endl;
-				    send(clientSocket, buffer, bytesReceived, 0);
+					msgAnalyzer(_clients[clientSocket], buffer);
+					//std::cout << "Client :" << buffer << std::endl;
 				}
 			}
 		}
 	}
 	close(serverSocket);
+}
+
+void	Server::msgAnalyzer(Client &client, char *message)
+{
+	std::string msg = message;
+
+	if (client.getIsRegistered())
+	{
+
+	}
+	else
+	{
+		registration(client, msg);
+	}
+}
+
+void Server::registration(Client &client, std::string &msg)
+{
+	std::istringstream iss(msg);
+	std::string token;
+
+	
+
 }

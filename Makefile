@@ -6,12 +6,13 @@
 #    By: mdi-paol <marvin@42.fr>                    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2023/07/06 14:39:03 by mdi-paol          #+#    #+#              #
-#    Updated: 2023/10/25 14:19:07 by mdi-paol         ###   ########.fr        #
+#    Updated: 2023/10/25 17:11:42 by mdi-paol         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
 NAME = ft_irc
-SRCS = main.cpp Server.cpp utils.cpp
+SRCS = main.cpp Server.cpp utils.cpp Client.cpp
+HEADER = Server.hpp utils.hpp Client.hpp
 FLAGS = -Wall -Werror -Wextra -std=c++98
 OBJS = $(SRCS:.cpp=.o)
 CC = c++
@@ -22,7 +23,7 @@ $(NAME): $(OBJS)
 	@ $(CC) $(FLAGS) $(OBJS) -o $(NAME)
 	@echo "$(GREEN)✅ Compiled ✅$(WHITE)"
 
-%.o: %.cpp
+%.o: %.cpp $(HEADER)
 	@ $(CC) $(FLAGS) -c $< -o $@
 
 clean:
