@@ -14,5 +14,6 @@
 #include "Server.hpp"
 
 #define MAX_QUEUE_CONN 10
+#define MAX_CLIENT 1024
 
 uint16_t	portConverter(const std::string &port);
