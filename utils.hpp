@@ -14,6 +14,7 @@
 #include <algorithm>
 #include <sstream>
 #include <ctime>
+#include <fcntl.h>
 
 #include "Client.hpp"
 #include "Server.hpp"

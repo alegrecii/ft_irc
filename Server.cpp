@@ -46,6 +46,9 @@ void	Server::run()
 			{
 				newSocket = accept(serverSocket, (struct sockaddr*)&newAddr, &addrSize);
 				event.data.fd = newSocket;
+				event.events = EPOLLIN; // Monitor read events for the new socket
+				epoll_ctl(epoll_fd, EPOLL_CTL_ADD, newSocket, &event);
+				std::cout << "Connection established with a client." << std::endl;
 				Client tmp(newSocket);
 				_clients[newSocket] = tmp;
 			}
@@ -54,6 +57,8 @@ void	Server::run()
 				int clientSocket = arrEvent[i].data.fd;
 				memset(buffer, 0, sizeof(buffer));
 				int bytesReceived = recv(clientSocket, buffer, sizeof(buffer), 0);
+				std::cout << "Client: " << clientSocket << std::endl;
+				std::cout << buffer << std::endl;
 				if (bytesReceived <= 0)
 				{
 					epoll_ctl(epoll_fd, EPOLL_CTL_DEL, clientSocket, NULL);
@@ -76,16 +81,12 @@ void	Server::msgAnalyzer(Client &client, char *message)
 	std::string msg = message;
 
 	if (client.getIsRegistered())
-	{
-
-	}
+		cmdAnalyzer(client, message);
 	else
-	{
 		registration(client, msg);
-	}
 }
 
-void Server::registration(Client &client, std::string &msg)
+void	Server::registration(Client &client, const std::string &msg)
 {
 	std::istringstream iss(msg);
 	std::string token;
@@ -103,6 +104,14 @@ void Server::registration(Client &client, std::string &msg)
 		client.setNikcname(info);
 	else if (!token.compare("USER"))
 		client.setUser(info);
+	else if (!token.compare("TEST"))
+		sleep(16);
 	if (!client.getNickname().empty() && !client.getNickname().empty() && client.getPassTaken())
 		client.setIsRegistered(true);
+}
+
+void	Server::cmdAnalyzer(Client &client, const std::string &msg)
+{
+ (void) client;
+ (void) msg;
 }
