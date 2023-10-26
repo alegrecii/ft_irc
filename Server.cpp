@@ -17,12 +17,15 @@ void	Server::run()
 	char buffer[512];
 
 	serverSocket = socket(AF_INET, SOCK_STREAM, 0);
+	if (fcntl(serverSocket, F_SETFL, O_NONBLOCK) == -1)
+		throw (std::runtime_error("fcntl-server"));
 	serverAddr.sin_family = AF_INET;
 	serverAddr.sin_port = htons(this->_port);
 	serverAddr.sin_addr.s_addr = htonl(INADDR_ANY);
 
 	bind(serverSocket, (struct sockaddr*)&serverAddr, sizeof(serverAddr));
 	listen(serverSocket, MAX_QUEUE_CONN);
+
 
 	std::cout << "Server is listening on port " << this->_port << "..." << std::endl;
 
@@ -45,6 +48,8 @@ void	Server::run()
 			if (arrEvent[i].data.fd == serverSocket)
 			{
 				newSocket = accept(serverSocket, (struct sockaddr*)&newAddr, &addrSize);
+				if (fcntl(newSocket, F_SETFL, O_NONBLOCK) == -1)
+					throw (std::runtime_error("fcntl-client"));
 				event.data.fd = newSocket;
 				event.events = EPOLLIN; // Monitor read events for the new socket
 				epoll_ctl(epoll_fd, EPOLL_CTL_ADD, newSocket, &event);

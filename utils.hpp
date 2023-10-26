@@ -15,6 +15,7 @@
 #include <sstream>
 #include <ctime>
 #include <fcntl.h>
+#include <csignal>
 
 #include "Client.hpp"
 #include "Server.hpp"
