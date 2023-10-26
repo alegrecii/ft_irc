@@ -13,6 +13,7 @@
 #include <map>
 #include <algorithm>
 #include <sstream>
+#include <ctime>
 
 #include "Client.hpp"
 #include "Server.hpp"

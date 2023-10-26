@@ -46,10 +46,11 @@ void	Server::run()
 			{
 				newSocket = accept(serverSocket, (struct sockaddr*)&newAddr, &addrSize);
 				event.data.fd = newSocket;
-				event.events = EPOLLIN; // Monitor read events for the new socket
-				epoll_ctl(epoll_fd, EPOLL_CTL_ADD, newSocket, &event);
-				std::cout << "Connection established with a client." << std::endl;
-				Client tmp;
+}
+
+void Server::registration(Client &client, std::string &msg)
+{
+				Client tmp(newSocket);
 				_clients[newSocket] = tmp;
 			}
 			else
@@ -92,7 +93,20 @@ void Server::registration(Client &client, std::string &msg)
 {
 	std::istringstream iss(msg);
 	std::string token;
+	std::string info;
 
-	
-
+	iss >> token >> info;
+	if (!_isPassword)
+		client.setPassTaken(true);
+	if (!token.compare("PASS"))
+	{
+		if (!info.compare(_psw))
+			client.setPassTaken(true);
+	}
+	else if (!token.compare("NICK"))
+		client.setNikcname(info);
+	else if (!token.compare("USER"))
+		client.setUser(info);
+	if (!client.getNickname().empty() && !client.getNickname().empty() && client.getPassTaken())
+		client.setIsRegistered(true);
 }

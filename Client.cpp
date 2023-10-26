@@ -1,12 +1,17 @@
 #include "Client.hpp"
 
-Client::Client() : _isRegister(false), _passTaken(false), _nickname(""), _user("")
+Client::Client() : _fd(-1), _isRegister(false), _passTaken(false), _nickname(""), _user(""), _startReg(time(0))
 {
+}
+
+Client::Client(int fd) : _fd(fd), _isRegister(false), _passTaken(false), _nickname(""), _user(""), _startReg(time(0))
+{
+	std::cout << "New user" << std::endl;
 }
 
 Client &Client::operator=(const Client &obj)
 {
-	(void)obj;
+	_fd = obj._fd;
 	return *this;
 }
 
@@ -29,3 +34,7 @@ void Client::setNikcname(const std::string &nickname){_nickname = nickname;}
 const std::string &Client::getUser() const{return _user;}
 
 void Client::setUser(const std::string &user){_user = user;}
+
+const time_t & Client::getStartReg() const{return _startReg;}
+
+const int &Client::getFd() const{return _fd;}
