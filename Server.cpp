@@ -46,10 +46,6 @@ void	Server::run()
 			{
 				newSocket = accept(serverSocket, (struct sockaddr*)&newAddr, &addrSize);
 				event.data.fd = newSocket;
-}
-
-void Server::registration(Client &client, std::string &msg)
-{
 				Client tmp(newSocket);
 				_clients[newSocket] = tmp;
 			}
