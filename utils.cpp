@@ -1,5 +1,16 @@
 #include "utils.hpp"
 
+extern bool running;
+
+void	sigHandler(int sig)
+{
+	if (sig == SIGINT)
+	{
+		std::cout << std::endl << "\033[F" << "Server closed!"<< std::endl;
+		running = false;
+	}
+}
+
 bool	isNumber(const std::string &str)
 {
 	for(size_t i = 0; i < str.size(); i++)

@@ -1,7 +1,10 @@
 #include "utils.hpp"
 
+bool	running;
+
 int	main(int ac, char **av)
 {
+	running = true;
 	if (ac != 3)
 	{
 		std::cerr << "Insert correct arguments!" << std::endl;
@@ -16,7 +19,7 @@ int	main(int ac, char **av)
 		}
 		catch(const std::exception& e)
 		{
-			std::cerr << e.what() << std::endl;
+			std::cerr << "Exception caught: " << e.what() << std::endl;
 		}
 	}
 }

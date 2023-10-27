@@ -11,6 +11,7 @@ private:
 	std::string		_nickname;
 	std::string		_user;
 	const time_t	_startReg;
+	std::string		_buffer;
 public:
 	Client();
 	Client(int fd);
@@ -27,5 +28,7 @@ public:
 	void				setUser(const std::string &user);
 	const time_t		&getStartReg() const;
 	const int			&getFd() const;
+	const std::string	&getBuffer() const;
+	void				setBuffer(const std::string &buffer);
 };
 

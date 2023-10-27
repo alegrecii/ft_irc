@@ -38,3 +38,7 @@ void Client::setUser(const std::string &user){_user = user;}
 const time_t & Client::getStartReg() const{return _startReg;}
 
 const int &Client::getFd() const{return _fd;}
+
+const std::string &Client::getBuffer() const {return _buffer;}
+
+void Client::setBuffer(const std::string &buffer) {_buffer = buffer;}

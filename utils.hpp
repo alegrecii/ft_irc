@@ -15,6 +15,7 @@
 #include <sstream>
 #include <ctime>
 #include <fcntl.h>
+#include <stdio.h>
 #include <csignal>
 
 #include "Client.hpp"
@@ -23,4 +24,7 @@
 #define MAX_QUEUE_CONN 10
 #define MAX_CLIENT 1024
 
+extern bool	running;
+
 uint16_t	portConverter(const std::string &port);
+void		sigHandler(int);
