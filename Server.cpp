@@ -114,14 +114,14 @@ void	Server::msgAnalyzer(Client &client, const char *message)
 
 		std::getline(iss, line);
 		msg.erase(0, pos + 1);
-		// std::cout << "msg " << msg << " pos: " << pos << std::endl; 
+
 		if (client.getIsRegistered())
 			cmdAnalyzer(client, line);
 		else
 			registration(client, line);
-		
+
 	}
-	//client buffer update
+	client.setBuffer(msg);
 }
 
 void	Server::registration(Client &client, const std::string &msg)
@@ -146,14 +146,18 @@ void	Server::registration(Client &client, const std::string &msg)
 		sleep(15);
 	if (!client.getNickname().empty() && !client.getUser().empty() && client.getPassTaken())
 	{
-		std::cout << "Benvenuto amico" << std::endl;
+		std::cout << client.getNickname() << " registered!" << std::endl;
+		send(client.getFd(), "Registration finished!\r\n", 24, 0);
 		client.setIsRegistered(true);
 	}
+	std::cout << msg << std::endl;
 }
 
 void	Server::cmdAnalyzer(Client &client, const std::string &msg)
 {
 	std::cout << "|" << msg << std::endl;
- 	(void) client;
+	(void) client;
 	(void) msg;
+
+
 }
