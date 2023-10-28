@@ -20,5 +20,6 @@ public:
 	void	msgAnalyzer(Client &client, const char *msg);
 	void	registration(Client &client, const std::string &msg);
 	void	cmdAnalyzer(Client &client, const std::string &msg);
+	void	welcomeMessage(Client &client);
 };
 

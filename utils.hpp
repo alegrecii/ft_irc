@@ -20,6 +20,7 @@
 
 #include "Client.hpp"
 #include "Server.hpp"
+#include "Channel.hpp"
 
 #define MAX_QUEUE_CONN 10
 #define MAX_CLIENT 1024

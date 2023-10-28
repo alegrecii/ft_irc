@@ -91,7 +91,7 @@ void	Server::run()
 	for(std::map<int, Client>::iterator it = _clients.begin(); it != _clients.end(); it++)
 	{
 		std::cout << "Closing fd " << it->first << std::endl;
-		send(it->first, "QUIT :Server disconnected!\r\n", 54, 0);
+		send(it->first, "QUIT :Server disconnected!\r\n", 29, 0);
 		epoll_ctl(epoll_fd, EPOLL_CTL_DEL, it->first, NULL);
 		close(it->first);
 	}
@@ -124,6 +124,46 @@ void	Server::msgAnalyzer(Client &client, const char *message)
 	client.setBuffer(msg);
 }
 
+void	Server::welcomeMessage(Client &client)
+{
+	std::string serverName = ":SUCA";
+	const int flags = MSG_DONTWAIT | MSG_NOSIGNAL;
+
+    /* std::string motm = "\r\"
+	"\r\n"
+				 " /  |  /  | /      \\       /      |/       \\  /      \r\n"
+                 ":$$ |  $$ |/$$$$$$  |      $$$$$$/ $$$$$$$  |/$$$$$$  |\r\n"
+                 ":$$ |__$$ |$$____$$ |        $$ |  $$ |__$$ |$$ |  $$/\r\n"
+                 ":$$    $$ | /    $$/         $$ |  $$    $$< $$ |      \r\n"
+                 ":$$$$$$$$$ |/$$$$$$/          $$ |  $$$$$$$  |$$ |   __ \r\n"
+                 ":      $$ |$$ |_____        _$$ |_ $$ |  $$ |$$ \\__/  |\r\n"
+                 ":      $$ |$$       |      / $$   |$$ |  $$ |$$    $$/ \r\n"
+                 ":      $$/ $$$$$$$$/       $$$$$$/ $$/   $$/  $$$$$$/  \r\n"
+	"\r\n"; */
+
+	std::string RPL_WELCOME = serverName + " 001 " + client.getNickname() + " :Welcome to the 42 Internet Relay Network " + client.getNickname() + "\r\n";
+	std::string RPL_YOURHOST = serverName + " 002 " + client.getNickname() + " :Hosted by Ale, Dami, Manu\r\n";
+	std::string RPL_CREATED = serverName + " 003 " + client.getNickname() + " :This server was created in Nidavellir\r\n";
+
+	send(client.getFd(), RPL_WELCOME.c_str(), RPL_WELCOME.length(), flags);
+	send(client.getFd(), RPL_YOURHOST.c_str(), RPL_YOURHOST.length(), flags);
+	send(client.getFd(), RPL_CREATED.c_str(), RPL_CREATED.length(), flags);
+
+	/* std::string RPL_CHANNEL = ":" + client.getNickname() + " JOIN sucablyat\r\n";
+	std::string RPL_TOPIC = " 332 " + client.getNickname() + " sucablyat" + " :Python is trash\r\n";
+	std::string RPL_LISTUSR = " 353 " + client.getNickname() + " #  sucablyat :~popo ~boh @jgw\r\n";
+	std::string	RPL_ENDOFLIST = " 366 " + client.getNickname() + " sucablyat" + " :pipi\r\n";
+
+	std::string RPL_CREATION = serverName + " 329 " + client.getNickname() + " CIAO" + " wo\r\n"; */
+
+	/* send(client.getFd(), RPL_CHANNEL.c_str(), RPL_CHANNEL.length(), flags);
+	send(client.getFd(), RPL_TOPIC.c_str(), RPL_TOPIC.length(), flags);
+	send(client.getFd(), RPL_LISTUSR.c_str(), RPL_LISTUSR.length(), flags);
+	send(client.getFd(), RPL_ENDOFLIST.c_str(), RPL_ENDOFLIST.length(), flags);
+
+	send(client.getFd(), RPL_CREATION.c_str(), RPL_CREATION.length(), flags); */
+}
+
 void	Server::registration(Client &client, const std::string &msg)
 {
 	std::istringstream iss(msg);
@@ -147,8 +187,10 @@ void	Server::registration(Client &client, const std::string &msg)
 	if (!client.getNickname().empty() && !client.getUser().empty() && client.getPassTaken())
 	{
 		std::cout << client.getNickname() << " registered!" << std::endl;
-		send(client.getFd(), "Registration finished!\r\n", 24, 0);
+		//send(client.getFd(), "Registration finished!\r\n", 25, 0);
+		//send(client.getFd(), "Welcome to My IRC Server! Enjoy your stay.\r\n", 45, 0);
 		client.setIsRegistered(true);
+		welcomeMessage(client);
 	}
 	std::cout << msg << std::endl;
 }
@@ -156,8 +198,16 @@ void	Server::registration(Client &client, const std::string &msg)
 void	Server::cmdAnalyzer(Client &client, const std::string &msg)
 {
 	std::cout << "|" << msg << std::endl;
-	(void) client;
-	(void) msg;
-
-
+	std::istringstream iss(msg);
+	std::string cmd;
+	std::string server;
+	std::string token;
+	iss >> cmd >> token;
+	if (!cmd.compare("PING"))
+	{
+		//std::cout << "Ciao" << std::endl;
+		std::string pong = "PONG server " + token + "\n";
+		std::cout << pong << std::endl;
+		send(client.getFd(), pong.c_str(), pong.length(), 0);
+	}
 }
