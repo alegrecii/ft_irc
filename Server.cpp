@@ -149,19 +149,19 @@ void	Server::welcomeMessage(Client &client)
 	send(client.getFd(), RPL_YOURHOST.c_str(), RPL_YOURHOST.length(), flags);
 	send(client.getFd(), RPL_CREATED.c_str(), RPL_CREATED.length(), flags);
 
-	/* std::string RPL_CHANNEL = ":" + client.getNickname() + " JOIN sucablyat\r\n";
-	std::string RPL_TOPIC = " 332 " + client.getNickname() + " sucablyat" + " :Python is trash\r\n";
-	std::string RPL_LISTUSR = " 353 " + client.getNickname() + " #  sucablyat :~popo ~boh @jgw\r\n";
-	std::string	RPL_ENDOFLIST = " 366 " + client.getNickname() + " sucablyat" + " :pipi\r\n";
+	// std::string RPL_CHANNEL = ":" + client.getNickname() + " JOIN #mdipaol\r\n";
+	// std::string RPL_TOPIC = " 332 " + client.getNickname() + " #mdipaol" + " :Python is trash\r\n";
+	// std::string RPL_LISTUSR = " 353 " + client.getNickname() + " #  mdipaol :~popo ~boh @jgw\r\n";
+	// std::string	RPL_ENDOFLIST = " 366 " + client.getNickname() + " #mdipaol" + " :pipi\r\n";
 
-	std::string RPL_CREATION = serverName + " 329 " + client.getNickname() + " CIAO" + " wo\r\n"; */
+	// std::string RPL_CREATION = serverName + " 329 " + client.getNickname() + " CIAO" + " wo\r\n";
 
-	/* send(client.getFd(), RPL_CHANNEL.c_str(), RPL_CHANNEL.length(), flags);
-	send(client.getFd(), RPL_TOPIC.c_str(), RPL_TOPIC.length(), flags);
-	send(client.getFd(), RPL_LISTUSR.c_str(), RPL_LISTUSR.length(), flags);
-	send(client.getFd(), RPL_ENDOFLIST.c_str(), RPL_ENDOFLIST.length(), flags);
+	// send(client.getFd(), RPL_CHANNEL.c_str(), RPL_CHANNEL.length(), flags);
+	// send(client.getFd(), RPL_TOPIC.c_str(), RPL_TOPIC.length(), flags);
+	// send(client.getFd(), RPL_LISTUSR.c_str(), RPL_LISTUSR.length(), flags);
+	// send(client.getFd(), RPL_ENDOFLIST.c_str(), RPL_ENDOFLIST.length(), flags);
 
-	send(client.getFd(), RPL_CREATION.c_str(), RPL_CREATION.length(), flags); */
+	// send(client.getFd(), RPL_CREATION.c_str(), RPL_CREATION.length(), flags);
 }
 
 void	Server::registration(Client &client, const std::string &msg)
@@ -189,6 +189,7 @@ void	Server::registration(Client &client, const std::string &msg)
 		std::cout << client.getNickname() << " registered!" << std::endl;
 		//send(client.getFd(), "Registration finished!\r\n", 25, 0);
 		//send(client.getFd(), "Welcome to My IRC Server! Enjoy your stay.\r\n", 45, 0);
+		std::cout << "ciao" << std::endl;
 		client.setIsRegistered(true);
 		welcomeMessage(client);
 	}
@@ -205,7 +206,6 @@ void	Server::cmdAnalyzer(Client &client, const std::string &msg)
 	iss >> cmd >> token;
 	if (!cmd.compare("PING"))
 	{
-		//std::cout << "Ciao" << std::endl;
 		std::string pong = "PONG server " + token + "\n";
 		std::cout << pong << std::endl;
 		send(client.getFd(), pong.c_str(), pong.length(), 0);
