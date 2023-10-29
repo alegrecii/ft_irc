@@ -10,7 +10,7 @@
 #                                                                              #
 # **************************************************************************** #
 
-NAME = ft_irc
+NAME = ircserver
 SRCS = main.cpp Server.cpp utils.cpp Client.cpp
 HEADER = Server.hpp utils.hpp Client.hpp
 FLAGS = -Wall -Werror -Wextra -std=c++98

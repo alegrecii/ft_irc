@@ -11,6 +11,8 @@
 #include <arpa/inet.h>
 #include <sys/epoll.h>
 #include <map>
+#include <list>
+#include <vector>
 #include <algorithm>
 #include <sstream>
 #include <ctime>
