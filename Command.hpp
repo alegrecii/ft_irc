@@ -28,9 +28,6 @@ private:
 	Command();
 	~Command();
 public:
-	static void		user(Server &server, Client &client, std::vector<std::string> &v);
-	static void		nick(Server &server, Client &client, std::vector<std::string> &v);
-	static void		pass(Server &server, Client &client, std::vector<std::string> &v);
 	static void		join(Server &server, Client &client, std::vector<std::string> &v);
 	static void		privmsg(Server &server, Client &client, std::vector<std::string> &v);
 	static void		ping(Server &server, Client &client, std::vector<std::string> &v);

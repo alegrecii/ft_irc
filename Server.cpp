@@ -2,9 +2,6 @@
 
 Server::Server(const std::string &port, const std::string &psw) : _port(portConverter(port)), _psw(psw), _isPassword(psw.compare("") != 0)
 {
-	_commands["NICK"] = Command::nick;
-	_commands["USER"] = Command::user;
-	_commands["PASS"] = Command::pass;
 	_commands["JOIN"] = Command::join;
 	_commands["PRIVMSG"] = Command::privmsg;
 	_commands["PONG"] = Command::pong;
@@ -207,17 +204,44 @@ void	Server::registration(Client &client, const std::string &msg)
 
 void	Server::cmdAnalyzer(Client &client, const std::string &msg)
 {
+	// pulire stringa /r/n
+	std::vector<std::string>						vParam;
+	std::map<std::string, commandFunct>::iterator	it;
+	std::istringstream								iss(msg);
+	std::string										cmd, param, last;
+
 	std::cout << "|" << msg << std::endl;
-	std::istringstream iss(msg);
-	std::string cmd;
-	std::string server;
-	std::string token;
-	iss >> cmd >> token;
-	if (!cmd.compare("PING"))
+
+	iss >> cmd;
+	if (iss.good() && (it = _commands.find(cmd)) != _commands.end())
 	{
-		std::string pong = "PONG server " + token + "\n";
-		std::cout << pong << std::endl;
-		send(client.getFd(), pong.c_str(), pong.length(), 0);
+		for(iss >> param; iss.good() && !iss.eof() && param[0] != ':'; iss >> param)
+		{
+			vParam.push_back(param);
+		}
+		if (iss.good() && !iss.eof())
+		{
+			std::getline(iss, last, (char)EOF);
+			vParam.push_back(param + last);
+		}
+		_commands[cmd](*this, client, vParam);
 	}
+	else
+	{
+		// Unrecognised command
+	}
+
+	
+	// std::istringstream iss(msg);
+	// std::string cmd;
+	// std::string server;
+	// std::string token;
+	// iss >> cmd >> token;
+	// if (!cmd.compare("PING"))
+	// {
+	// 	std::string pong = "PONG server " + token + "\n";
+	// 	std::cout << pong << std::endl;
+	// 	send(client.getFd(), pong.c_str(), pong.length(), 0);
+	// }
 
 }

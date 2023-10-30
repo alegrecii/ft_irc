@@ -1,31 +1,17 @@
 #include "Command.hpp"
 
-void	Command::user(Server &server, Client &client, std::vector<std::string> &v)
-{
-	(void)server;
-	(void)client;
-	(void)v;
-}
-
-void	Command::nick(Server &server, Client &client, std::vector<std::string> &v)
-{
-	(void)server;
-	(void)client;
-	(void)v;
-}
-
-void	Command::pass(Server &server, Client &client, std::vector<std::string> &v)
-{
-	(void)server;
-	(void)client;
-	(void)v;
-}
-
 void	Command::join(Server &server, Client &client, std::vector<std::string> &v)
 {
 	(void)server;
 	(void)client;
 	(void)v;
+
+	std::cout << "Command detected: JOIN" << std::endl;
+	std::cout << "Parameters: " << std::endl;
+	for (std::vector<std::string>::iterator it = v.begin(); it != v.end(); ++it)
+	{
+		std::cout << *it << std::endl;
+	}
 }
 
 void	Command::privmsg(Server &server, Client &client, std::vector<std::string> &v)
@@ -33,6 +19,13 @@ void	Command::privmsg(Server &server, Client &client, std::vector<std::string> &
 	(void)server;
 	(void)client;
 	(void)v;
+
+	std::cout << "Command detected: PRIVMSG" << std::endl;
+	std::cout << "Parameters: " << std::endl;
+	for (std::vector<std::string>::iterator it = v.begin(); it != v.end(); ++it)
+	{
+		std::cout << *it << std::endl;
+	}
 }
 
 void	Command::pong(Server &server, Client &client, std::vector<std::string> &v)
@@ -40,6 +33,13 @@ void	Command::pong(Server &server, Client &client, std::vector<std::string> &v)
 	(void)server;
 	(void)client;
 	(void)v;
+
+	std::cout << "Command detected: PONG" << std::endl;
+	std::cout << "Parameters: " << std::endl;
+	for (std::vector<std::string>::iterator it = v.begin(); it != v.end(); ++it)
+	{
+		std::cout << *it << std::endl;
+	}
 }
 
 void	Command::ping(Server &server, Client &client, std::vector<std::string> &v)

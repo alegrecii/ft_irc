@@ -6,14 +6,13 @@
 #    By: dcolucci <dcolucci@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2023/07/06 14:39:03 by mdi-paol          #+#    #+#              #
-#    Updated: 2023/10/30 12:25:45 by dcolucci         ###   ########.fr        #
+#    Updated: 2023/10/30 13:08:03 by dcolucci         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
 NAME = ircserv
 SRCS = main.cpp Server.cpp utils.cpp Client.cpp Command.cpp
 NAME = ircserv
-SRCS = main.cpp Server.cpp utils.cpp Client.cpp
 HEADER = Server.hpp utils.hpp Client.hpp
 FLAGS = -Wall -Werror -Wextra -std=c++98
 OBJS = $(SRCS:.cpp=.o)
