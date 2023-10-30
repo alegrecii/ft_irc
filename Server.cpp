@@ -2,7 +2,16 @@
 
 Server::Server(const std::string &port, const std::string &psw) : _port(portConverter(port)), _psw(psw), _isPassword(psw.compare("") != 0)
 {
-
+	_commands["NICK"] = Command::nick;
+	_commands["USER"] = Command::user;
+	_commands["PASS"] = Command::pass;
+	_commands["JOIN"] = Command::join;
+	_commands["PRIVMSG"] = Command::privmsg;
+	_commands["PONG"] = Command::pong;
+	_commands["KICK"] = Command::kick;
+	_commands["INVITE"] = Command::invite;
+	_commands["TOPIC"] = Command::topic;
+	_commands["MODE"] = Command::mode;
 }
 
 Server::~Server()
@@ -135,7 +144,7 @@ void	Server::welcomeMessage(Client &client)
                  ":$$ |  $$ |/$$$$$$  |      $$$$$$/ $$$$$$$  |/$$$$$$  |\r\n"
                  ":$$ |__$$ |$$____$$ |        $$ |  $$ |__$$ |$$ |  $$/\r\n"
                  ":$$    $$ | /    $$/         $$ |  $$    $$< $$ |      \r\n"
-                 ":$$$$$$$$$ |/$$$$$$/          $$ |  $$$$$$$  |$$ |   __ \r\n"
+                 ":$$$$$$$$ |/$$$$$$/          $$ |  $$$$$$$  |$$ |   __ \r\n"
                  ":      $$ |$$ |_____        _$$ |_ $$ |  $$ |$$ \\__/  |\r\n"
                  ":      $$ |$$       |      / $$   |$$ |  $$ |$$    $$/ \r\n"
                  ":      $$/ $$$$$$$$/       $$$$$$/ $$/   $$/  $$$$$$/  \r\n"
@@ -210,4 +219,5 @@ void	Server::cmdAnalyzer(Client &client, const std::string &msg)
 		std::cout << pong << std::endl;
 		send(client.getFd(), pong.c_str(), pong.length(), 0);
 	}
+
 }

@@ -2,15 +2,20 @@
 
 #include "utils.hpp"
 
+class Server;
 class Client;
+class Command;
+
+typedef	void	(*commandFunct)(Server &server, Client &client, std::vector<std::string> &v);
 
 class Server
 {
 private:
-	uint16_t const				_port;
-	std::string const			_psw;
-	bool const					_isPassword;
-	std::map<int, Client>		_clients;
+	uint16_t const						_port;
+	std::string const					_psw;
+	bool const							_isPassword;
+	std::map<int, Client>				_clients;
+	std::map<std::string, commandFunct>	_commands;
 public:
 	Server(const std::string &port, const std::string &psw);
 	~Server();

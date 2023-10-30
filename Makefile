@@ -3,15 +3,15 @@
 #                                                         :::      ::::::::    #
 #    Makefile                                           :+:      :+:    :+:    #
 #                                                     +:+ +:+         +:+      #
-#    By: mdi-paol <marvin@42.fr>                    +#+  +:+       +#+         #
+#    By: dcolucci <dcolucci@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2023/07/06 14:39:03 by mdi-paol          #+#    #+#              #
-#    Updated: 2023/10/25 17:11:42 by mdi-paol         ###   ########.fr        #
+#    Updated: 2023/10/30 12:17:13 by dcolucci         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
-NAME = ircserver
-SRCS = main.cpp Server.cpp utils.cpp Client.cpp
+NAME = ircserv
+SRCS = main.cpp Server.cpp utils.cpp Client.cpp Command.cpp
 HEADER = Server.hpp utils.hpp Client.hpp
 FLAGS = -Wall -Werror -Wextra -std=c++98
 OBJS = $(SRCS:.cpp=.o)
