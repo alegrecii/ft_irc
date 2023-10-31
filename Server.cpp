@@ -71,8 +71,9 @@ void	Server::run()
 				event.events = EPOLLIN; // Monitor read events for the new socket
 				epoll_ctl(epoll_fd, EPOLL_CTL_ADD, newSocket, &event);
 				std::cout << "Connection established with a client." << std::endl;
-				Client tmp(newSocket);
-				_clients[newSocket] = tmp;
+				// Client tmp(newSocket);
+				// _clients[newSocket] = tmp;
+				_clients.insert(std::make_pair(newSocket, Client(newSocket)));
 			}
 			else
 			{
@@ -233,7 +234,7 @@ void	Server::cmdAnalyzer(Client &client, const std::string &msg)
 	std::istringstream								iss(msg);
 	std::map<std::string, commandFunct>::iterator	it;
 
-	std::cout << "|" << msg << std::endl;
+	std::cout << "\033[32m" << msg << "\033[0m" << std::endl;
 	iss >> cmd;
 	if ((it = _commands.find(cmd)) != _commands.end())
 	{
@@ -250,8 +251,9 @@ void	Server::setChannels(const std::string &name, const std::string &pass, const
 {
 	if (_channels.find(name) == _channels.end())
 	{
-		Channel channel(name, pass, nameClient);
-		_channels[name] = channel;
+		// Channel channel(name, pass, nameClient);
+		// _channels[name] = channel;
+		_channels.insert(std::make_pair(name, Channel(name, pass, nameClient)));
 	}
 	else
 	{
