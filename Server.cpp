@@ -4,6 +4,7 @@ Server::Server(const std::string &port, const std::string &psw) : _port(portConv
 {
 	_commands["JOIN"] = Command::join;
 	_commands["PRIVMSG"] = Command::privmsg;
+	_commands["PING"] = Command::ping;
 	_commands["PONG"] = Command::pong;
 	_commands["KICK"] = Command::kick;
 	_commands["INVITE"] = Command::invite;
@@ -213,16 +214,19 @@ void	Server::cmdAnalyzer(Client &client, const std::string &msg)
 	std::cout << "|" << msg << std::endl;
 
 	iss >> cmd;
-	if (iss.good() && (it = _commands.find(cmd)) != _commands.end())
+	if (iss.good() && ((it = _commands.find(cmd)) != _commands.end()))
 	{
-		for(iss >> param; iss.good() && !iss.eof() && param[0] != ':'; iss >> param)
+		while (iss.good())
 		{
-			vParam.push_back(param);
-		}
-		if (iss.good() && !iss.eof())
-		{
-			std::getline(iss, last, (char)EOF);
-			vParam.push_back(param + last);
+			iss >> param;
+			if (param[0] == ':')
+			{
+				std::getline(iss, last, (char)EOF);
+				vParam.push_back(param + last);
+				break;
+			}
+			else
+				vParam.push_back(param);
 		}
 		_commands[cmd](*this, client, vParam);
 	}

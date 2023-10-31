@@ -15,7 +15,7 @@ class Client;
 	-PRIVMSG
 	-PING ?
 	-PONG
-	
+
 	-KICK
 	-INVITE
 	-TOPIC

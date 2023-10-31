@@ -47,6 +47,13 @@ void	Command::ping(Server &server, Client &client, std::vector<std::string> &v)
 	(void)server;
 	(void)client;
 	(void)v;
+
+	std::cout << "Command detected: PONG" << std::endl;
+	std::cout << "Parameters: " << std::endl;
+	for (std::vector<std::string>::iterator it = v.begin(); it != v.end(); ++it)
+	{
+		std::cout << *it << std::endl;
+	}
 }
 
 void	Command::kick(Server &server, Client &client, std::vector<std::string> &v)
