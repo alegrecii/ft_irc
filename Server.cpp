@@ -5,7 +5,8 @@ Server::Server(const std::string &port, const std::string &psw) : _port(portConv
 {
 	_commands["JOIN"] = Command::join;
 	_commands["PRIVMSG"] = Command::privmsg;
-	_commands["PING"] = Command::pong;
+	_commands["PING"] = Command::ping;
+	_commands["PONG"] = Command::pong;
 	_commands["KICK"] = Command::kick;
 	_commands["INVITE"] = Command::invite;
 	_commands["TOPIC"] = Command::topic;
@@ -203,32 +204,40 @@ void	Server::registration(Client &client, const std::string &msg)
 	std::cout << msg << std::endl;
 }
 
+static void	fillParam(std::vector<std::string> &vParam, std::istringstream &iss)
+{
+	std::string	param, last;
+	
+
+	while (std::getline(iss, param, ' '))
+	{
+		if (param.empty())
+			continue;
+		else if (param[0] == ':')
+		{
+			std::getline(iss, last, (char)EOF);
+			param.erase(0, 1);
+			if (!last.empty())
+				vParam.push_back(param + " " + last);
+		}
+		else
+			vParam.push_back(param);
+	}
+}
+
 void	Server::cmdAnalyzer(Client &client, const std::string &msg)
 {
 	// pulire stringa /r/n
 	std::vector<std::string>						vParam;
-	std::map<std::string, commandFunct>::iterator	it;
+	std::string										cmd;
 	std::istringstream								iss(msg);
-	std::string										cmd, param, last;
+	std::map<std::string, commandFunct>::iterator	it;
 
 	std::cout << "|" << msg << std::endl;
-
 	iss >> cmd;
 	if ((it = _commands.find(cmd)) != _commands.end())
 	{
-		while (std::getline(iss, param, ' '))
-		{
-			if (param.empty())
-				continue;
-			else if (param[0] == ':')
-			{
-				std::getline(iss, last, (char)EOF);
-				param.erase(0, 1);
-				vParam.push_back(param + last);
-			}
-			else
-				vParam.push_back(param);
-		}
+		fillParam(vParam, iss);
 		_commands[cmd](*this, client, vParam);
 	}
 	else

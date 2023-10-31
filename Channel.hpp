@@ -14,8 +14,7 @@ private:
 	bool						_topicRestrict;
 	bool						_isLimit;
 
-	std::vector<std::string>	_clients;
-	std::vector<std::string>	_operators;
+	std::map<std::string, bool>	_clientsOp;
 
 public:
 	Channel();
