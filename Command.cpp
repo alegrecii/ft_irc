@@ -7,7 +7,7 @@ void	Command::createChannel(const std::string &name, const std::string &pass, Cl
 	std::string RPL_NAMREPLY1 = ":ircserv 353 " + client.getNickname() + " = " + name + " :@ale @damiano\r\n";
 	std::string RPL_ENDOFNAMES = ":ircserv 366 " + client.getNickname() + " " + name + " :End of NAMES list\r\n";
 
-	
+
 
 	send(client.getFd(), RPL_JOIN.c_str(), RPL_JOIN.size(), 0);
 	send(client.getFd(), RPL_NAMREPLY.c_str(), RPL_NAMREPLY.size(), 0);
@@ -40,7 +40,6 @@ void	Command::join(Server &server, Client &client, std::vector<std::string> &v)
 			createChannel(name, pass, client);  //RPL_JOIN , RPL_TOPIC, RPL_NAMREPLY, RPL_ENDOFNAMES
 		}
 	}
-
 }
 
 void	Command::privmsg(Server &server, Client &client, std::vector<std::string> &v)
