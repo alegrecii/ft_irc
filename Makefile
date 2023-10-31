@@ -3,15 +3,15 @@
 #                                                         :::      ::::::::    #
 #    Makefile                                           :+:      :+:    :+:    #
 #                                                     +:+ +:+         +:+      #
-#    By: dcolucci <dcolucci@student.42.fr>          +#+  +:+       +#+         #
+#    By: mdi-paol <marvin@42.fr>                    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2023/07/06 14:39:03 by mdi-paol          #+#    #+#              #
-#    Updated: 2023/10/30 13:08:03 by dcolucci         ###   ########.fr        #
+#    Updated: 2023/10/30 19:08:07 by mdi-paol         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
 NAME = ircserv
-SRCS = main.cpp Server.cpp utils.cpp Client.cpp Command.cpp
+SRCS = main.cpp Server.cpp utils.cpp Client.cpp Command.cpp Channel.cpp
 NAME = ircserv
 HEADER = Server.hpp utils.hpp Client.hpp
 FLAGS = -Wall -Werror -Wextra -std=c++98

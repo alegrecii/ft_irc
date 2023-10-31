@@ -5,13 +5,15 @@
 class Client
 {
 private:
-	int				_fd;
-	bool			_isRegister;
-	bool			_passTaken;
-	std::string		_nickname;
-	std::string		_user;
-	const time_t	_startReg;
-	std::string		_buffer;
+	int							_fd;
+	bool						_isRegister;
+	bool						_passTaken;
+	std::string					_nickname;
+	std::string					_user;
+	const time_t				_startReg;
+	std::string					_buffer;
+
+	std::vector<std::string>	_channels;
 public:
 	Client();
 	Client(int fd);

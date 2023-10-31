@@ -1,11 +1,11 @@
 #include "Server.hpp"
+#include "Server.hpp"
 
 Server::Server(const std::string &port, const std::string &psw) : _port(portConverter(port)), _psw(psw), _isPassword(psw.compare("") != 0)
 {
 	_commands["JOIN"] = Command::join;
 	_commands["PRIVMSG"] = Command::privmsg;
-	_commands["PING"] = Command::ping;
-	_commands["PONG"] = Command::pong;
+	_commands["PING"] = Command::pong;
 	_commands["KICK"] = Command::kick;
 	_commands["INVITE"] = Command::invite;
 	_commands["TOPIC"] = Command::topic;
@@ -233,20 +233,19 @@ void	Server::cmdAnalyzer(Client &client, const std::string &msg)
 	}
 	else
 	{
-		// Unrecognised command
+		std::cout << "Unrecognized command" << std::endl;
 	}
+}
 
-	
-	// std::istringstream iss(msg);
-	// std::string cmd;
-	// std::string server;
-	// std::string token;
-	// iss >> cmd >> token;
-	// if (!cmd.compare("PING"))
-	// {
-	// 	std::string pong = "PONG server " + token + "\n";
-	// 	std::cout << pong << std::endl;
-	// 	send(client.getFd(), pong.c_str(), pong.length(), 0);
-	// }
-
+void	Server::setChannels(const std::string &name, const std::string &pass, const std::string &nameClient)
+{
+	if (_channels.find(name) == _channels.end())
+	{
+		Channel channel(name, pass, nameClient);
+		_channels[name] = channel;
+	}
+	else
+	{
+		_channels[name].setClients(name);
+	}
 }

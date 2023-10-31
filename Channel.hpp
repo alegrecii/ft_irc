@@ -5,7 +5,6 @@
 class Channel
 {
 private:
-	Channel();
 	std::string					_name;
 	std::string					_passKey;
 	std::string					_topic;
@@ -15,12 +14,12 @@ private:
 	bool						_topicRestrict;
 	bool						_isLimit;
 
-	std::vector<Client>			_clients;
+	std::vector<std::string>	_clients;
 	std::vector<std::string>	_operators;
-	std::vector<std::string>	_banList;
 
 public:
-	Channel(const std::string &name, const Client &creator);
+	Channel();
+	Channel(const std::string &name, const std::string &pass, const std::string &nameClient);
 	~Channel();
 	Channel&	operator=(const Channel &obj);
 
@@ -30,4 +29,5 @@ public:
 	bool				getInviteOnly() const;
 	bool				getTopicRestrict() const;
 	bool				getIsLimit() const;
+	void				setClients(const std::string &name);
 };
