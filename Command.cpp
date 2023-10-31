@@ -22,7 +22,7 @@ void	Command::createChannel(const std::string &name, const std::string &pass, Cl
 void	Command::join(Server &server, Client &client, std::vector<std::string> &v)
 {
 	std::cout << "Command detected: JOIN" << std::endl;
-	if (v.size() < 2)
+	if (v.size() < 1)
 	{
 		std::string error = client.getNickname() + " 461 :Not enough parameters\r\n";
 		send(client.getFd(), error.c_str(), error.size(), 0);
