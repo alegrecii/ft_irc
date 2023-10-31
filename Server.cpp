@@ -214,16 +214,17 @@ void	Server::cmdAnalyzer(Client &client, const std::string &msg)
 	std::cout << "|" << msg << std::endl;
 
 	iss >> cmd;
-	if (iss.good() && ((it = _commands.find(cmd)) != _commands.end()))
+	if ((it = _commands.find(cmd)) != _commands.end())
 	{
-		while (iss.good())
+		while (std::getline(iss, param, ' '))
 		{
-			iss >> param;
-			if (param[0] == ':')
+			if (param.empty())
+				continue;
+			else if (param[0] == ':')
 			{
 				std::getline(iss, last, (char)EOF);
+				param.erase(0, 1);
 				vParam.push_back(param + last);
-				break;
 			}
 			else
 				vParam.push_back(param);
