@@ -6,7 +6,7 @@ Channel::Channel()
 
 Channel::Channel(const std::string &name, const std::string &pass, const std::string &nameClient) : _name(name), _passKey(pass)
 {
-	_clients.push_back(nameClient);
+	_clientsOp[nameClient] = true;
 }
 
 Channel::~Channel()
@@ -23,5 +23,5 @@ Channel& Channel::operator=(const Channel& obj)
 
 void	Channel::setClients(const std::string &name)
 {
-	_clients.push_back(name);
+	_clientsOp[name] = false;
 }
