@@ -29,6 +29,7 @@ public:
 	void	registration(Client &client, const std::string &msg);
 	void	cmdAnalyzer(Client &client, const std::string &msg);
 	void	welcomeMessage(Client &client);
-	void	setChannels(const std::string &name, const std::string &pass, const std::string &nameClient);
+	void	setChannels(const std::string &name, const std::string &pass, Client &client);
+	void	sendJoin(const std::string &name, Client &client);
 };
 

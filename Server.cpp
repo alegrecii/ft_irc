@@ -207,7 +207,7 @@ void	Server::registration(Client &client, const std::string &msg)
 static void	fillParam(std::vector<std::string> &vParam, std::istringstream &iss)
 {
 	std::string	param, last;
-	
+
 
 	while (std::getline(iss, param, ' '))
 	{
@@ -217,8 +217,14 @@ static void	fillParam(std::vector<std::string> &vParam, std::istringstream &iss)
 		{
 			std::getline(iss, last, (char)EOF);
 			param.erase(0, 1);
-			if (!last.empty())
-				vParam.push_back(param + " " + last);
+			if (last.size() + param.size())
+			{
+				std::cout << "ciao" << std::endl;
+				if (!last.empty())
+					vParam.push_back(param + " " + last);
+				else
+					vParam.push_back(param);
+			}
 		}
 		else
 			vParam.push_back(param);
@@ -246,14 +252,41 @@ void	Server::cmdAnalyzer(Client &client, const std::string &msg)
 	}
 }
 
-void	Server::setChannels(const std::string &name, const std::string &pass, const std::string &nameClient)
+void	Server::sendJoin(const std::string &name, Client &client)
+{
+	std::string RPL_JOIN = ":" + client.getNickname() + "!" + client.getUser() + "@localhost JOIN :" + name + "\r\n";
+	std::string RPL_NAMREPLY = ":ircserv 353 " + client.getNickname() + " = " + name + " :manuel\r\n";
+	std::string RPL_NAMREPLY1 = ":ircserv 353 " + client.getNickname() + " = " + name + " :@ale @damiano\r\n";
+	std::string RPL_ENDOFNAMES = ":ircserv 366 " + client.getNickname() + " " + name + " :End of NAMES list\r\n";
+
+	send(client.getFd(), RPL_JOIN.c_str(), RPL_JOIN.size(), 0);
+	send(client.getFd(), RPL_NAMREPLY.c_str(), RPL_NAMREPLY.size(), 0);
+	send(client.getFd(), RPL_NAMREPLY1.c_str(), RPL_NAMREPLY1.size(), 0);
+	send(client.getFd(), RPL_ENDOFNAMES.c_str(), RPL_ENDOFNAMES.size(), 0);
+
+	// std::string RPL_JOIN = ":" + _client_info[fd].nickname + "!" + _server.hostname + " JOIN #" + channel_name + "\r\n";
+    // std::string RPL_NAMREPLY = ":ircserv 353 " + _client_info[fd].nickname + " = #" + channel_name + " :";
+    // std::string RPL_ENDOFNAMES = ":ircserv 366 " + _client_info[fd].nickname + " #" + channel_name + " :End of NAMES list\r\n"
+}
+
+void	Server::setChannels(const std::string &name, const std::string &pass, Client &client)
 {
 	if (_channels.find(name) == _channels.end())
 	{
-		_channels.insert(std::make_pair(name, Channel(name, pass, nameClient)));
+		_channels.insert(std::make_pair(name, Channel(name, pass, client.getNickname())));
+		sendJoin(name, client);
 	}
 	else
 	{
-		_channels[name].setClients(name);
+		if (!_channels[name].getPasskey().compare(pass))
+		{
+			_channels[name].setClients(name);
+			sendJoin(name, client);
+		}
+		else
+		{
+			std::string	ERR_BADCHANNELKEY = "475 " + client.getNickname() + " " + name + " :Cannot join channel!\r\n";
+			send(client.getFd(), ERR_BADCHANNELKEY.c_str(), ERR_BADCHANNELKEY.size(), 0);
+		}
 	}
 }

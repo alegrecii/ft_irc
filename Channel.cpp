@@ -21,6 +21,8 @@ Channel& Channel::operator=(const Channel& obj)
 	return *this;
 }
 
+const std::string & Channel::getPasskey() const { return _passKey;}
+
 void	Channel::setClients(const std::string &name)
 {
 	_clientsOp[name] = false;

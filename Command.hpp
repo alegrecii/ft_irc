@@ -28,7 +28,6 @@ private:
 	Command();
 	~Command();
 public:
-	static void		createChannel(const std::string &name, const std::string &pass, Client &client);
 	static void		join(Server &server, Client &client, std::vector<std::string> &v);
 	static void		privmsg(Server &server, Client &client, std::vector<std::string> &v);
 	static void		ping(Server &server, Client &client, std::vector<std::string> &v);

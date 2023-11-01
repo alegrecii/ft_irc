@@ -24,9 +24,11 @@ public:
 
 	const std::string	&getName() const;
 	const std::string	&getTopic() const;
+	const std::string	&getPasskey() const;
 	unsigned int		getMaxUsers() const;
 	bool				getInviteOnly() const;
 	bool				getTopicRestrict() const;
 	bool				getIsLimit() const;
 	void				setClients(const std::string &name);
+
 };
