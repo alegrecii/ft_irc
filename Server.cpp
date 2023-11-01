@@ -250,8 +250,6 @@ void	Server::setChannels(const std::string &name, const std::string &pass, const
 {
 	if (_channels.find(name) == _channels.end())
 	{
-		// Channel channel(name, pass, nameClient);
-		// _channels[name] = channel;
 		_channels.insert(std::make_pair(name, Channel(name, pass, nameClient)));
 	}
 	else
