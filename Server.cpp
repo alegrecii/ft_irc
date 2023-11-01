@@ -6,7 +6,6 @@ Server::Server(const std::string &port, const std::string &psw) : _port(portConv
 	_commands["JOIN"] = Command::join;
 	_commands["PRIVMSG"] = Command::privmsg;
 	_commands["PING"] = Command::ping;
-	_commands["PONG"] = Command::pong;
 	_commands["KICK"] = Command::kick;
 	_commands["INVITE"] = Command::invite;
 	_commands["TOPIC"] = Command::topic;

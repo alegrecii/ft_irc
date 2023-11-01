@@ -32,7 +32,6 @@ public:
 	static void		join(Server &server, Client &client, std::vector<std::string> &v);
 	static void		privmsg(Server &server, Client &client, std::vector<std::string> &v);
 	static void		ping(Server &server, Client &client, std::vector<std::string> &v);
-	static void		pong(Server &server, Client &client, std::vector<std::string> &v);
 	static void		kick(Server &server, Client &client, std::vector<std::string> &v);
 	static void		invite(Server &server, Client &client, std::vector<std::string> &v);
 	static void		topic(Server &server, Client &client, std::vector<std::string> &v);

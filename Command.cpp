@@ -20,7 +20,7 @@ void	Command::createChannel(const std::string &name, const std::string &pass, Cl
 void	Command::join(Server &server, Client &client, std::vector<std::string> &v)
 {
 	std::cout << "Command detected: JOIN" << std::endl;
-	if (v.size() < 1 && v.size() > 2)
+	if (v.size() < 1)
 	{
 		std::string error = client.getNickname() + " 461 :Not enough parameters\r\n";
 		send(client.getFd(), error.c_str(), error.size(), 0);
@@ -42,7 +42,7 @@ void	Command::join(Server &server, Client &client, std::vector<std::string> &v)
 			}
 		}
 	}
-	else if (v.size() < 2)
+	else if (v.size() == 1)
 	{
 		while(std::getline(param1, name, ','))
 		{
@@ -58,29 +58,13 @@ void	Command::join(Server &server, Client &client, std::vector<std::string> &v)
 
 void	Command::privmsg(Server &server, Client &client, std::vector<std::string> &v)
 {
-	(void)server;
-	(void)client;
-	(void)v;
-
 	std::cout << "Command detected: PRIVMSG" << std::endl;
-	std::cout << "Parameters: " << std::endl;
-	for (std::vector<std::string>::iterator it = v.begin(); it != v.end(); ++it)
-	{
-		std::cout << *it << std::endl;
-	}
-}
 
-void	Command::pong(Server &server, Client &client, std::vector<std::string> &v)
-{
-	(void)server;
-	(void)client;
-	(void)v;
-
-	std::cout << "Command detected: PING" << std::endl;
-	std::cout << "Parameters: " << std::endl;
-	for (std::vector<std::string>::iterator it = v.begin(); it != v.end(); ++it)
+	if (v.size() < 2)
 	{
-		std::cout << *it << std::endl;
+		std::string error = client.getNickname() + " 461 :Not enough parameters\r\n";
+		send(client.getFd(), error.c_str(), error.size(), 0);
+		return;
 	}
 }
 
