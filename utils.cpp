@@ -44,9 +44,7 @@ std::vector<std::string>	ft_split(const std::string &str, const char delimiter)
 	std::vector<std::string>	vParam;
 
 	while (std::getline(iss, param, delimiter))
-	{
 		if (!param.empty())
 			vParam.push_back(param);
-	}
 	return(vParam);
 }

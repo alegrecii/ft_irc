@@ -10,10 +10,86 @@ Server::Server(const std::string &port, const std::string &psw) : _port(portConv
 	_commands["INVITE"] = Command::invite;
 	_commands["TOPIC"] = Command::topic;
 	_commands["MODE"] = Command::mode;
+	_commands["NICK"] = Command::nick;
+	_commands["PASS"] = Command::pass;
 }
 
 Server::~Server()
 {
+}
+
+const std::string	&Server::getPassword() const { return _psw; }
+
+
+Client *Server::getClient(const std::string &clName)
+{
+	Client	*c = NULL;
+	std::map<std::string, Client*>::const_iterator	it = _clients.find(clName);
+
+	if (it != _clients.end())
+		c = it->second;
+	return(c);
+}
+
+void Server::updateNick(Client &client, const std::string &newName)
+{
+	_clients.erase(client.getNickname());
+	_clients[newName] = &client;
+	client.setNikcname(newName);
+}
+
+Client	*Server::getClientByFd(int fd) const
+{
+	std::map<std::string, Client*>::const_iterator	it = _clients.begin();
+	std::map<std::string, Client*>::const_iterator	end = _clients.end();
+
+	while (it != end)
+	{
+		if (it->second && it->second->getFd() == fd)
+			return(it->second);
+		++it;
+	}
+
+	std::list<Client*>::const_iterator	lit = _clientsNotRegistered.begin();
+	std::list<Client*>::const_iterator	lend = _clientsNotRegistered.end();
+
+	while (lit != lend)
+	{
+		if (*lit && (*lit)->getFd() == fd)
+			return (*lit);
+		++lit;
+	}
+	return (NULL);
+}
+
+Channel *Server::getChannel(const std::string &chName)
+{
+	std::map<std::string, Channel*>::iterator	it;
+	if ((it = _channels.find(chName)) != _channels.end())
+		return(_channels[chName]);
+	return NULL;
+}
+
+void Server::deleteClientByFd(int fd)
+{
+	std::map<std::string, Client*>::iterator	it = _clients.begin();
+	std::map<std::string, Client*>::iterator	end = _clients.end();
+
+	while (it != end)
+	{
+		if (it->second)
+		{
+			if (it->second->getFd() == fd)
+			{
+				// Remove client from all channels
+				// Delete client memory
+				// Erase iterator from map
+			}
+		}
+		else
+			_clients.erase(it);
+		++it;
+	}
 }
 
 void	Server::run()
@@ -70,9 +146,13 @@ void	Server::run()
 				event.events = EPOLLIN; // Monitor read events for the new socket
 				epoll_ctl(epoll_fd, EPOLL_CTL_ADD, newSocket, &event);
 				std::cout << "Connection established with a client." << std::endl;
-				// Client tmp(newSocket);
-				// _clients[newSocket] = tmp;
-				_clients.insert(std::make_pair(newSocket, Client(newSocket)));
+				
+				// _clients.insert(std::make_pair(??, new Client(newSocket)));
+					
+
+				// Enter new fd in the list of not registered client
+
+				_clientsNotRegistered.push_back(new Client(newSocket));
 			}
 			else
 			{
@@ -84,27 +164,39 @@ void	Server::run()
 				if (bytesReceived <= 0)
 				{
 					epoll_ctl(epoll_fd, EPOLL_CTL_DEL, clientSocket, NULL);
-					_clients.erase(_clients.find(clientSocket));
 					close(clientSocket);
+					// _clients.erase(_clients.find(clientSocket));
+					
+					// Check if clientSocket is registered or not
+
 					std::cout << "Client disconnected." << std::endl;
 				}
 				else
 				{
-					msgAnalyzer(_clients[clientSocket], buffer);
+					Client * c = NULL;
+					c = getClientByFd(clientSocket);
+					std::cout << "Address of client " << clientSocket << " : " << c << std::endl;
+					if (c)
+						msgAnalyzer(*c, buffer);
 					//std::cout << "Client :" << buffer << std::endl;
 				}
 			}
 		}
 	}
-	for(std::map<int, Client>::iterator it = _clients.begin(); it != _clients.end(); it++)
-	{
-		std::cout << "Closing fd " << it->first << std::endl;
-		send(it->first, "QUIT :Server disconnected!\r\n", 29, 0);
-		epoll_ctl(epoll_fd, EPOLL_CTL_DEL, it->first, NULL);
-		close(it->first);
-	}
-	close(epoll_fd);
-	close(serverSocket);
+
+	std::cout << "Sono uscito dal run" << std::endl;
+
+	// DESTRUCTOR CALL
+
+	// for(std::map<int, Client>::iterator it = _clients.begin(); it != _clients.end(); it++)
+	// {
+	// 	std::cout << "Closing fd " << it->first << std::endl;
+	// 	send(it->first, "QUIT :Server disconnected!\r\n", 29, 0);
+	// 	epoll_ctl(epoll_fd, EPOLL_CTL_DEL, it->first, NULL);
+	// 	close(it->first);
+	// }
+	// close(epoll_fd);
+	// close(serverSocket);
 }
 
 void	Server::msgAnalyzer(Client &client, const char *message)
@@ -123,6 +215,12 @@ void	Server::msgAnalyzer(Client &client, const char *message)
 		std::getline(iss, line);
 		msg.erase(0, pos + 1);
 
+		// if (line.size() && line[line.size() - 1] == '\r')
+		// {
+		// 	printf("puliziaTime\n");
+		// 	line.erase(line.size() - 1, 1);
+		// }
+
 		if (client.getIsRegistered())
 			cmdAnalyzer(client, line);
 		else
@@ -136,19 +234,6 @@ void	Server::welcomeMessage(Client &client)
 {
 	std::string serverName = ":SUCA";
 	const int flags = MSG_DONTWAIT | MSG_NOSIGNAL;
-
-    /* std::string motm = "\r\"
-	"\r\n"
-				 " /  |  /  | /      \\       /      |/       \\  /      \r\n"
-                 ":$$ |  $$ |/$$$$$$  |      $$$$$$/ $$$$$$$  |/$$$$$$  |\r\n"
-                 ":$$ |__$$ |$$____$$ |        $$ |  $$ |__$$ |$$ |  $$/\r\n"
-                 ":$$    $$ | /    $$/         $$ |  $$    $$< $$ |      \r\n"
-                 ":$$$$$$$$ |/$$$$$$/          $$ |  $$$$$$$  |$$ |   __ \r\n"
-                 ":      $$ |$$ |_____        _$$ |_ $$ |  $$ |$$ \\__/  |\r\n"
-                 ":      $$ |$$       |      / $$   |$$ |  $$ |$$    $$/ \r\n"
-                 ":      $$/ $$$$$$$$/       $$$$$$/ $$/   $$/  $$$$$$/  \r\n"
-	"\r\n"; */
-
 	std::string RPL_WELCOME = serverName + " 001 " + client.getNickname() + " :Welcome to the 42 Internet Relay Network " + client.getNickname() + "\r\n";
 	std::string RPL_YOURHOST = serverName + " 002 " + client.getNickname() + " :Hosted by Ale, Dami, Manu\r\n";
 	std::string RPL_CREATED = serverName + " 003 " + client.getNickname() + " :This server was created in Nidavellir\r\n";
@@ -156,42 +241,38 @@ void	Server::welcomeMessage(Client &client)
 	send(client.getFd(), RPL_WELCOME.c_str(), RPL_WELCOME.length(), flags);
 	send(client.getFd(), RPL_YOURHOST.c_str(), RPL_YOURHOST.length(), flags);
 	send(client.getFd(), RPL_CREATED.c_str(), RPL_CREATED.length(), flags);
-
-	// std::string RPL_CHANNEL = ":" + client.getNickname() + " JOIN #mdipaol\r\n";
-	// std::string RPL_TOPIC = " 332 " + client.getNickname() + " #mdipaol" + " :Python is trash\r\n";
-	// std::string RPL_LISTUSR = " 353 " + client.getNickname() + " #  mdipaol :~popo ~boh @jgw\r\n";
-	// std::string	RPL_ENDOFLIST = " 366 " + client.getNickname() + " #mdipaol" + " :pipi\r\n";
-
-	// std::string RPL_CREATION = serverName + " 329 " + client.getNickname() + " CIAO" + " wo\r\n";
-
-	// send(client.getFd(), RPL_CHANNEL.c_str(), RPL_CHANNEL.length(), flags);
-	// send(client.getFd(), RPL_TOPIC.c_str(), RPL_TOPIC.length(), flags);
-	// send(client.getFd(), RPL_LISTUSR.c_str(), RPL_LISTUSR.length(), flags);
-	// send(client.getFd(), RPL_ENDOFLIST.c_str(), RPL_ENDOFLIST.length(), flags);
-
-	// send(client.getFd(), RPL_CREATION.c_str(), RPL_CREATION.length(), flags);
 }
 
 void	Server::registration(Client &client, const std::string &msg)
 {
-	std::istringstream iss(msg);
-	std::string token;
-	std::string info;
+	// std::istringstream iss(msg);
+	// std::string token;
+	// std::string info;
+	std::vector<std::string>	params;
+	std::string					cmd;
 
-	iss >> token >> info;
+	params = ft_split(msg, ' ');
+	if (params.size() < 2)
+	{
+		std::string error = "461 " + client.getNickname() + " :Not enough parameters\r\n";
+		send(client.getFd(), error.c_str(), error.size(), 0);
+		return;
+	}
+
+	cmd = params[0];
+	params.erase(params.begin());
+
 	if (!_isPassword)
 		client.setPassTaken(true);
-	if (!token.compare("PASS"))
-	{
-		if (!info.compare(":" + _psw))
-			client.setPassTaken(true);
-	}
-	else if (!token.compare("NICK"))
-		client.setNikcname(info);
-	else if (!token.compare("USER"))
-		client.setUser(info);
-	else if (!token.compare("TEST"))
-		sleep(15);
+
+	if (!client.getPassTaken() && !cmd.compare("PASS"))
+		Command::pass(*this, client, params);
+	else if (!cmd.compare("NICK"))
+		Command::nick(*this, client, params);
+	else if (!cmd.compare("USER"))
+		client.setUser(params[0]);
+	// else if (!cmd.compare("TEST"))
+	// 	sleep(15);
 	if (!client.getNickname().empty() && !client.getUser().empty() && client.getPassTaken())
 	{
 		std::cout << client.getNickname() << " registered!" << std::endl;
@@ -200,6 +281,9 @@ void	Server::registration(Client &client, const std::string &msg)
 		std::cout << "ciao" << std::endl;
 		client.setIsRegistered(true);
 		welcomeMessage(client);
+
+		_clientsNotRegistered.remove(&client);
+		_clients[client.getNickname()] = &client;
 	}
 	std::cout << msg << std::endl;
 }
@@ -263,24 +347,20 @@ void	Server::sendJoin(const std::string &name, Client &client)
 	send(client.getFd(), RPL_NAMREPLY.c_str(), RPL_NAMREPLY.size(), 0);
 	send(client.getFd(), RPL_NAMREPLY1.c_str(), RPL_NAMREPLY1.size(), 0);
 	send(client.getFd(), RPL_ENDOFNAMES.c_str(), RPL_ENDOFNAMES.size(), 0);
-
-	// std::string RPL_JOIN = ":" + _client_info[fd].nickname + "!" + _server.hostname + " JOIN #" + channel_name + "\r\n";
-    // std::string RPL_NAMREPLY = ":ircserv 353 " + _client_info[fd].nickname + " = #" + channel_name + " :";
-    // std::string RPL_ENDOFNAMES = ":ircserv 366 " + _client_info[fd].nickname + " #" + channel_name + " :End of NAMES list\r\n"
 }
 
 void	Server::setChannels(const std::string &name, const std::string &pass, Client &client)
 {
 	if (_channels.find(name) == _channels.end())
 	{
-		_channels.insert(std::make_pair(name, Channel(name, pass, client.getNickname())));
+		_channels.insert(std::make_pair(name, new Channel(name, pass, &client)));
 		sendJoin(name, client);
 	}
 	else
 	{
-		if (!_channels[name].getPasskey().compare(pass))
+		if (!_channels[name]->getPasskey().compare(pass))
 		{
-			_channels[name].setClients(name);
+			_channels[name]->setClients(&client);
 			sendJoin(name, client);
 		}
 		else

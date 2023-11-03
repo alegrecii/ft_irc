@@ -16,13 +16,22 @@ private:
 	std::string const					_psw;
 	bool const							_isPassword;
 
-	std::map<int, Client>				_clients;
-	std::map<std::string, Channel>		_channels;
+	std::list<Client*>					_clientsNotRegistered;
+	std::map<std::string, Client*>		_clients;
+	std::map<std::string, Channel*>		_channels;
 	std::map<std::string, commandFunct>	_commands;
+
 public:
 	Server(const std::string &port, const std::string &psw);
 	~Server();
 
+	const std::string	&getPassword() const;
+
+	void	updateNick(Client &client, const std::string &newName);
+	Client	*getClient(const std::string &name);
+	Channel	*getChannel(const std::string &chName);
+	Client	*getClientByFd(int fd) const;
+	void	deleteClientByFd(int fd);
 
 	void	run();
 	void	msgAnalyzer(Client &client, const char *msg);

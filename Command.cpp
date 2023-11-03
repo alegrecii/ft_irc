@@ -1,5 +1,45 @@
 #include "Command.hpp"
 
+void	Command::pass(Server &server, Client &client, std::vector<std::string> &v)
+{
+	if (v.size() < 1)
+	{
+		std::string error = "461 " + client.getNickname() + " PASS :Not enough parameters\r\n";
+		send(client.getFd(), error.c_str(), error.size(), 0);
+		return;
+	}
+	if(client.getIsRegistered())
+	{
+		std::string error = "462 " + client.getNickname() + " :Already registered\r\n";
+		send(client.getFd(), error.c_str(), error.size(), 0);
+		return;
+	}
+	if (v[0].compare(":" + server.getPassword()))
+	{
+		std::string error = "464 " + client.getNickname() + " :Password incorrect\r\n";
+		send(client.getFd(), error.c_str(), error.size(), 0);
+		return;
+	}
+	client.setPassTaken(true);
+}
+
+void	Command::nick(Server &server, Client &client, std::vector<std::string> &v)
+{
+	if (v.size() < 1)
+	{
+		std::string error = "461 " + client.getNickname() + " NICK :Not enough parameters\r\n";
+		send(client.getFd(), error.c_str(), error.size(), 0);
+		return;
+	}
+	if (server.getClient(v[0]))
+	{
+		std::string	ERR_NICKNAMEINUSE = "433 " + client.getNickname() + " " + v[0] + " :Nickname is already in use\r\n";
+		send(client.getFd(), ERR_NICKNAMEINUSE.c_str(), ERR_NICKNAMEINUSE.size(), 0);
+		return;
+	}
+	server.updateNick(client, v[0]);
+}
+
 void	Command::join(Server &server, Client &client, std::vector<std::string> &v)
 {
 	std::cout << "Command detected: JOIN" << std::endl;
@@ -39,19 +79,61 @@ void	Command::join(Server &server, Client &client, std::vector<std::string> &v)
 	}
 }
 
+void	Command::msgToClient(Server &s, Client &c, const std::string &targetClient, const std::string &msg)
+{
+	Client	*cl = s.getClient(targetClient);
+	if (cl == NULL)
+	{
+		// Error : no client corresponding to the targetNick
+		std::string ERR_NOSUCHNICK = "401 " + c.getNickname() + " " + targetClient + " :No such nick\r\n";
+		send(c.getFd(), ERR_NOSUCHNICK.c_str(), ERR_NOSUCHNICK.size(), 0);
+		return ;
+	}
+	std::string	MSG = ":" + c.getNickname() + " PRIVMSG " + targetClient + " :" + msg + "\r\n";
+	send(cl->getFd(), MSG.c_str(), MSG.size(), 0);
+}
+
+void	Command::msgToChannel(Server &s, Client &c, const std::string &chName, const std::string &msg)
+{
+	Channel	*ch = s.getChannel(chName);
+
+	if (!ch)
+	{
+		std::string	ERR_CANNOTSENDTOCHAN = ":" + c.getNickname() + " 404 " + c.getNickname() + " " + chName + " :Cannot send to channel\r\n";
+		send(c.getFd(), ERR_CANNOTSENDTOCHAN.c_str(), ERR_CANNOTSENDTOCHAN.size(), 0);
+		return;
+	}
+
+	std::vector<Client *>	allClients = ch->getAllClients();
+	for(size_t i = 0; i < allClients.size(); i++)
+	{
+		if (allClients[i]->getNickname() != c.getNickname())
+		{
+			std::string	MSG_CHANNEL = ":" + c.getNickname() + " PRIVMSG " + chName + " :" + msg + "\r\n";
+			send(allClients[i]->getFd(), MSG_CHANNEL.c_str(), MSG_CHANNEL.size(), 0);
+		}
+	}
+}
+
 void	Command::privmsg(Server &server, Client &client, std::vector<std::string> &v)
 {
 	std::cout << "Command detected: PRIVMSG" << std::endl;
 	(void) server;
-	for (std::vector<std::string>::iterator it = v.begin(); it != v.end(); ++it)
-	{
-		std::cout << *it << std::endl;
-	}
 	if (v.size() < 2)
 	{
-		std::string error = "461 " + client.getNickname() + "PRIVMSG :Not enough parameters\r\n";
+		std::string error = "461 " + client.getNickname() + " PRIVMSG :Not enough parameters\r\n";
 		send(client.getFd(), error.c_str(), error.size(), 0);
 		return;
+	}
+	std::vector<std::string>	params = ft_split(v[0], ',');
+	std::string					msg = v[1];
+
+	for(size_t i = 0; i < params.size(); i++)
+	{
+		if (params[i][0] == '#' || params[i][0] == '&')
+			msgToChannel(server, client, params[i], msg);
+		else
+			msgToClient(server, client, params[i], msg);
 	}
 }
 

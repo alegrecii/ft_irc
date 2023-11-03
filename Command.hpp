@@ -27,7 +27,13 @@ class Command
 private:
 	Command();
 	~Command();
+
+	static void		msgToChannel(Server &s, Client &c, const std::string &chName, const std::string &msg);
+	static void		msgToClient(Server &s, Client &c, const std::string &targetClient, const std::string &msg);
+
 public:
+	static void		pass(Server &server, Client &client, std::vector<std::string> &v);
+	static void		nick(Server &server, Client &client, std::vector<std::string> &v);
 	static void		join(Server &server, Client &client, std::vector<std::string> &v);
 	static void		privmsg(Server &server, Client &client, std::vector<std::string> &v);
 	static void		ping(Server &server, Client &client, std::vector<std::string> &v);

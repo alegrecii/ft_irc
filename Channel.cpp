@@ -4,9 +4,11 @@ Channel::Channel()
 {
 }
 
-Channel::Channel(const std::string &name, const std::string &pass, const std::string &nameClient) : _name(name), _passKey(pass)
+Channel::Channel(const std::string &name, const std::string &pass, Client *creator)
+: _name(name), _passKey(pass)
 {
-	_clientsOp[nameClient] = true;
+	if (creator)
+		_clientsOp[creator->getNickname()] = creator;
 }
 
 Channel::~Channel()
@@ -23,7 +25,31 @@ Channel& Channel::operator=(const Channel& obj)
 
 const std::string & Channel::getPasskey() const { return _passKey;}
 
-void	Channel::setClients(const std::string &name)
+
+void Channel::setClients(Client *client)
 {
-	_clientsOp[name] = false;
+	if (!client)
+		return;
+	_clients[client->getNickname()] = client;
+}
+
+std::vector<Client*>	Channel::getAllClients() const
+{
+	std::vector<Client*>	vec;
+	std::map<std::string, Client*>::const_iterator	it = _clients.begin();
+	std::map<std::string, Client*>::const_iterator	end = _clients.end();
+
+	for(; it != end; ++it)
+	{
+		vec.push_back(it->second);
+	}
+
+	it = _clientsOp.begin();
+	end = _clientsOp.end();
+
+	for(; it != end; ++it)
+	{
+		vec.push_back(it->second);
+	}
+	return (vec);
 }
