@@ -133,6 +133,9 @@ void	Server::run()
 	{
 		int ready_fds = epoll_wait(epoll_fd, arrEvent, MAX_CLIENT, -1); // Wait for events
 
+		if (ready_fds == -1)
+			perror("epoll_wait");
+
 		for (int i = 0; i < ready_fds; ++i)
 		{
 			if (arrEvent[i].data.fd == serverSocket)
