@@ -42,3 +42,15 @@ const int &Client::getFd() const{return _fd;}
 const std::string &Client::getBuffer() const {return _buffer;}
 
 void Client::setBuffer(const std::string &buffer) {_buffer = buffer;}
+
+void Client::deleteFromChannels()
+{
+	for(std::vector<Channel *>::iterator it = _joinedChannels.begin(); it != _joinedChannels.end(); ++it)
+	{
+		if(*it)
+		{
+			(*it)->deleteClientFromChannel(_nickname);
+			
+		}
+	}
+}

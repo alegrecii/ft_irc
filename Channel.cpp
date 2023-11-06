@@ -33,6 +33,18 @@ void Channel::setClients(Client *client)
 	_clients[client->getNickname()] = client;
 }
 
+void	Channel::deleteClientFromChannel(const std::string &nick)
+{
+	Client	*c = findClient(nick);
+
+	if (!c)
+		return;
+	if (isOperator(nick))
+		_clientsOp.erase(nick);
+	else
+		_clients.erase(nick);
+}
+
 std::vector<Client*>	Channel::getAllClients() const
 {
 	std::vector<Client*>	vec;

@@ -31,7 +31,7 @@ public:
 	Client	*getClient(const std::string &name);
 	Channel	*getChannel(const std::string &chName);
 	Client	*getClientByFd(int fd) const;
-	void	deleteClientByFd(int fd);
+	void	deleteClient(Client *client);
 
 	void	run();
 	void	msgAnalyzer(Client &client, const char *msg);

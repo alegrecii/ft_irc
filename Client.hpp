@@ -13,7 +13,7 @@ private:
 	const time_t				_startReg;
 	std::string					_buffer;
 
-	std::vector<std::string>	_channels;
+	std::vector<Channel *>		_joinedChannels;
 public:
 	Client();
 	Client(int fd);
@@ -32,5 +32,7 @@ public:
 	const int			&getFd() const;
 	const std::string	&getBuffer() const;
 	void				setBuffer(const std::string &buffer);
+
+	void				deleteFromChannels();
 };
 

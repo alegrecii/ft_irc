@@ -12,6 +12,7 @@ Server::Server(const std::string &port, const std::string &psw) : _port(portConv
 	_commands["MODE"] = Command::mode;
 	_commands["NICK"] = Command::nick;
 	_commands["PASS"] = Command::pass;
+	_commands["USER"] = Command::user;
 }
 
 Server::~Server()
@@ -33,9 +34,12 @@ Client *Server::getClient(const std::string &clName)
 
 void Server::updateNick(Client &client, const std::string &newName)
 {
-	_clients.erase(client.getNickname());
-	_clients[newName] = &client;
 	client.setNikcname(newName);
+	if (client.getIsRegistered())
+	{
+		_clients.erase(client.getNickname());
+		_clients[newName] = &client;
+	}
 }
 
 Client	*Server::getClientByFd(int fd) const
@@ -70,26 +74,16 @@ Channel *Server::getChannel(const std::string &chName)
 	return NULL;
 }
 
-void Server::deleteClientByFd(int fd)
+void Server::deleteClient(Client *client)
 {
-	std::map<std::string, Client*>::iterator	it = _clients.begin();
-	std::map<std::string, Client*>::iterator	end = _clients.end();
-
-	while (it != end)
-	{
-		if (it->second)
-		{
-			if (it->second->getFd() == fd)
-			{
-				// Remove client from all channels
-				// Delete client memory
-				// Erase iterator from map
-			}
-		}
-		else
-			_clients.erase(it);
-		++it;
-	}
+	if (client->getIsRegistered())
+		client->deleteFromChannels();
+	else
+		_clientsNotRegistered.remove(client);
+	delete(client);
+	std::cout << "Client disconnected." << std::endl;
+	std::string		clientName = client->getNickname();
+	_clients.erase(clientName);
 }
 
 void	Server::run()
@@ -119,7 +113,7 @@ void	Server::run()
 
 	std::cout << "Server is listening on port " << this->_port << "..." << std::endl;
 
-	int epoll_fd = epoll_create1(0); // Create an epoll instance
+	int epoll_fd = epoll_create1(0);
 
 	struct epoll_event event;
 	event.events = EPOLLIN; // Monitor read events
@@ -159,29 +153,32 @@ void	Server::run()
 			}
 			else
 			{
+				Client * c = NULL;
 				int clientSocket = arrEvent[i].data.fd;
+				c = getClientByFd(clientSocket);
 				memset(buffer, 0, sizeof(buffer));
 				int bytesReceived = recv(clientSocket, buffer, sizeof(buffer), 0);
 				std::cout << "Client: " << clientSocket << std::endl;
-				// std::cout << buffer << std::endl;
 				if (bytesReceived <= 0)
 				{
 					epoll_ctl(epoll_fd, EPOLL_CTL_DEL, clientSocket, NULL);
 					close(clientSocket);
 					// _clients.erase(_clients.find(clientSocket));
 					
-					// Check if clientSocket is registered or not
+					if (c->getIsRegistered())
+					{
+						
+					}
+					else
+						_clientsNotRegistered.remove(c);
+
+					delete(c);
 
 					std::cout << "Client disconnected." << std::endl;
 				}
-				else
+				else if (c)
 				{
-					Client * c = NULL;
-					c = getClientByFd(clientSocket);
-					std::cout << "Address of client " << clientSocket << " : " << c << std::endl;
-					if (c)
-						msgAnalyzer(*c, buffer);
-					//std::cout << "Client :" << buffer << std::endl;
+					msgAnalyzer(*c, buffer);
 				}
 			}
 		}
@@ -217,18 +214,10 @@ void	Server::msgAnalyzer(Client &client, const char *message)
 
 		std::getline(iss, line);
 		msg.erase(0, pos + 1);
-
-		// if (line.size() && line[line.size() - 1] == '\r')
-		// {
-		// 	printf("puliziaTime\n");
-		// 	line.erase(line.size() - 1, 1);
-		// }
-
 		if (client.getIsRegistered())
 			cmdAnalyzer(client, line);
 		else
 			registration(client, line);
-
 	}
 	client.setBuffer(msg);
 }
@@ -248,19 +237,21 @@ void	Server::welcomeMessage(Client &client)
 
 void	Server::registration(Client &client, const std::string &msg)
 {
-	// std::istringstream iss(msg);
-	// std::string token;
-	// std::string info;
 	std::vector<std::string>	params;
 	std::string					cmd;
 
 	params = ft_split(msg, ' ');
-	if (params.size() < 2)
-	{
-		std::string error = "461 " + client.getNickname() + " :Not enough parameters\r\n";
-		send(client.getFd(), error.c_str(), error.size(), 0);
+
+	// if (params.size() < 2)
+	// {
+	// 	std::string error = "461 " + client.getNickname() + " :Not enough parameters\r\n";
+	// 	send(client.getFd(), error.c_str(), error.size(), 0);
+	// 	return;
+	// }
+
+	// Controllo empty command
+	if (!params.size())
 		return;
-	}
 
 	cmd = params[0];
 	params.erase(params.begin());
@@ -273,18 +264,25 @@ void	Server::registration(Client &client, const std::string &msg)
 	else if (!cmd.compare("NICK"))
 		Command::nick(*this, client, params);
 	else if (!cmd.compare("USER"))
-		client.setUser(params[0]);
-	// else if (!cmd.compare("TEST"))
-	// 	sleep(15);
+		Command::user(*this, client, params);
+	else
+	{
+		std::string error = "451 " + client.getNickname() + " :You have not registered\r\n";
+		send(client.getFd(), error.c_str(), error.size(), 0);
+		return;
+	}
 	if (!client.getNickname().empty() && !client.getUser().empty() && client.getPassTaken())
 	{
+		if (this->getClient(client.getNickname()))
+		{
+			std::string	ERR_NICKNAMEINUSE = "433 " + client.getNickname() + " :Nickname is already in use\r\n";
+			send(client.getFd(), ERR_NICKNAMEINUSE.c_str(), ERR_NICKNAMEINUSE.size(), 0);
+			client.setNikcname("");
+			return;
+		}
 		std::cout << client.getNickname() << " registered!" << std::endl;
-		//send(client.getFd(), "Registration finished!\r\n", 25, 0);
-		//send(client.getFd(), "Welcome to My IRC Server! Enjoy your stay.\r\n", 45, 0);
-		std::cout << "ciao" << std::endl;
 		client.setIsRegistered(true);
 		welcomeMessage(client);
-
 		_clientsNotRegistered.remove(&client);
 		_clients[client.getNickname()] = &client;
 	}
@@ -306,7 +304,6 @@ static void	fillParam(std::vector<std::string> &vParam, std::istringstream &iss)
 			param.erase(0, 1);
 			if (last.size() + param.size())
 			{
-				std::cout << "ciao" << std::endl;
 				if (!last.empty())
 					vParam.push_back(param + " " + last);
 				else

@@ -38,4 +38,5 @@ public:
 	std::vector<Client *>				getAllClients() const;
 	Client*								findClient(const std::string &cl);
 	bool								isOperator(const std::string &cl);
+	void								deleteClientFromChannel(const std::string &cl);
 };

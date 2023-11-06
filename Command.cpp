@@ -1,6 +1,25 @@
 #include "Command.hpp"
 
-void	Command::pass(Server &server, Client &client, std::vector<std::string> &v)
+void Command::user(Server &server, Client &client, std::vector<std::string> &v)
+{
+	(void)server;
+	if(client.getIsRegistered())
+	{
+		std::string error = "462 " + client.getNickname() + " :Already registered\r\n";
+		send(client.getFd(), error.c_str(), error.size(), 0);
+		return;
+	}
+	if (!v.size())
+	{
+		std::string error = "461 " + client.getNickname() + " USER :Not enough parameters\r\n";
+		send(client.getFd(), error.c_str(), error.size(), 0);
+		return;
+	}
+
+	client.setUser(v[0]);
+}
+
+void Command::pass(Server &server, Client &client, std::vector<std::string> &v)
 {
 	if (v.size() < 1)
 	{
