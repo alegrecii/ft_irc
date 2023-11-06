@@ -76,6 +76,8 @@ Channel *Server::getChannel(const std::string &chName)
 
 void Server::deleteClient(Client *client)
 {
+	if (!client)
+		return;
 	if (client->getIsRegistered())
 		client->deleteFromChannels();
 	else
@@ -84,6 +86,7 @@ void Server::deleteClient(Client *client)
 	std::cout << "Client disconnected." << std::endl;
 	std::string		clientName = client->getNickname();
 	_clients.erase(clientName);
+	delete(client);
 }
 
 void	Server::run()
@@ -163,23 +166,12 @@ void	Server::run()
 				{
 					epoll_ctl(epoll_fd, EPOLL_CTL_DEL, clientSocket, NULL);
 					close(clientSocket);
-					// _clients.erase(_clients.find(clientSocket));
-					
-					if (c->getIsRegistered())
-					{
-						
-					}
-					else
-						_clientsNotRegistered.remove(c);
-
-					delete(c);
-
+					deleteClient(c);
+					// Send disconnection to client?
 					std::cout << "Client disconnected." << std::endl;
 				}
 				else if (c)
-				{
 					msgAnalyzer(*c, buffer);
-				}
 			}
 		}
 	}
