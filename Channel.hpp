@@ -36,6 +36,7 @@ public:
 	void								sentToAll(Server &s, const std::string &msg) const;
 
 	std::vector<Client *>				getAllClients() const;
+	std::map<std::string, Client *>		getClientsOp() const;
 	Client*								findClient(const std::string &cl);
 	bool								isOperator(const std::string &cl);
 	void								deleteClientFromChannel(const std::string &cl);

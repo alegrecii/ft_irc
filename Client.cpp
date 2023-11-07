@@ -50,7 +50,7 @@ void Client::deleteFromChannels()
 		if(*it)
 		{
 			(*it)->deleteClientFromChannel(_nickname);
-			
+
 		}
 	}
 }

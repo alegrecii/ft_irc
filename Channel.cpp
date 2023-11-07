@@ -65,3 +65,16 @@ std::vector<Client*>	Channel::getAllClients() const
 	}
 	return (vec);
 }
+
+std::map<std::string, Client *> Channel::getClientsOp() const { return _clientsOp;}
+
+Client *Channel::findClient(const std::string &cl)
+{
+	if (_clientsOp.find(cl) != _clientsOp.end())
+		return _clientsOp.find(cl)->second;
+	if (_clients.find(cl) != _clients.end())
+		return _clients.find(cl)->second;
+	return NULL;
+}
+
+bool Channel::isOperator(const std::string &cl) { return (_clientsOp.find(cl) != _clientsOp.end()); }

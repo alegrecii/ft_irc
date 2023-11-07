@@ -97,6 +97,9 @@ void	Server::run()
 	socklen_t addrSize;
 	char buffer[512];
 
+	memset(&serverAddr, 0, sizeof(sockaddr_in));
+	memset(&newAddr, 0, sizeof(sockaddr_in));
+	memset(&addrSize, 0, sizeof(socklen_t));
 	serverSocket = socket(AF_INET, SOCK_STREAM, 0);
 	if (serverSocket == -1)
 		perror("socket");
@@ -119,6 +122,7 @@ void	Server::run()
 	int epoll_fd = epoll_create1(0);
 
 	struct epoll_event event;
+	memset(&event, 0, sizeof(epoll_event));
 	event.events = EPOLLIN; // Monitor read events
 	event.data.fd = serverSocket;
 
@@ -146,9 +150,9 @@ void	Server::run()
 				event.events = EPOLLIN; // Monitor read events for the new socket
 				epoll_ctl(epoll_fd, EPOLL_CTL_ADD, newSocket, &event);
 				std::cout << "Connection established with a client." << std::endl;
-				
+
 				// _clients.insert(std::make_pair(??, new Client(newSocket)));
-					
+
 
 				// Enter new fd in the list of not registered client
 
@@ -166,7 +170,7 @@ void	Server::run()
 				{
 					epoll_ctl(epoll_fd, EPOLL_CTL_DEL, clientSocket, NULL);
 					close(clientSocket);
-					deleteClient(c);
+					//deleteClient(c);
 					// Send disconnection to client?
 					std::cout << "Client disconnected." << std::endl;
 				}
@@ -180,15 +184,16 @@ void	Server::run()
 
 	// DESTRUCTOR CALL
 
-	// for(std::map<int, Client>::iterator it = _clients.begin(); it != _clients.end(); it++)
-	// {
-	// 	std::cout << "Closing fd " << it->first << std::endl;
-	// 	send(it->first, "QUIT :Server disconnected!\r\n", 29, 0);
-	// 	epoll_ctl(epoll_fd, EPOLL_CTL_DEL, it->first, NULL);
-	// 	close(it->first);
-	// }
-	// close(epoll_fd);
-	// close(serverSocket);
+	for(std::map<std::string, Client *>::iterator it = _clients.begin(); it != _clients.end(); it++)
+	{
+		std::cout << "Closing fd " << it->second->getFd() << std::endl;
+		send(it->second->getFd(), "QUIT :Server disconnected!\r\n", 29, 0);
+		epoll_ctl(epoll_fd, EPOLL_CTL_DEL, it->second->getFd(), NULL);
+		close(it->second->getFd());
+		delete it->second;
+	}
+	close(epoll_fd);
+	close(serverSocket);
 }
 
 void	Server::msgAnalyzer(Client &client, const char *message)
@@ -328,16 +333,37 @@ void	Server::cmdAnalyzer(Client &client, const std::string &msg)
 	}
 }
 
+std::string	Server::findUsers(const std::string &name)
+{
+	std::string	users;
+
+	std::vector<Client *>	Clients = _channels[name]->getAllClients();
+	std::map<std::string, Client *> Ops = _channels[name]->getClientsOp();
+
+	for (std::vector<Client *>::iterator it = Clients.begin(); it != Clients.end(); ++it)
+	{
+		if (Ops.find((*it)->getNickname()) != Ops.end())
+			users += "@" + (*it)->getNickname() + " ";
+		else
+			users += (*it)->getNickname() + " ";
+	}
+	return users;
+}
+
 void	Server::sendJoin(const std::string &name, Client &client)
 {
-	std::string RPL_JOIN = ":" + client.getNickname() + "!" + client.getUser() + "@localhost JOIN :" + name + "\r\n";
-	std::string RPL_NAMREPLY = ":ircserv 353 " + client.getNickname() + " = " + name + " :manuel\r\n";
-	std::string RPL_NAMREPLY1 = ":ircserv 353 " + client.getNickname() + " = " + name + " :@ale @damiano\r\n";
-	std::string RPL_ENDOFNAMES = ":ircserv 366 " + client.getNickname() + " " + name + " :End of NAMES list\r\n";
+	std::string	users;
+	std::vector<Client *>	allClient = _channels[name]->getAllClients();
+	users += findUsers(name);
 
-	send(client.getFd(), RPL_JOIN.c_str(), RPL_JOIN.size(), 0);
+	std::string RPL_NAMREPLY = ":ircserv 353 " + client.getNickname() + " = " + name + " :" + users + "\r\n";
+	std::string RPL_ENDOFNAMES = ":ircserv 366 " + client.getNickname() + " " + name + " :End of NAMES list\r\n";
+	std::string RPL_JOIN = ":" + client.getNickname() + "!" + client.getUser() + "@localhost JOIN :" + name + "\r\n";
+
+	for (std::vector<Client *>::iterator it = allClient.begin(); it != allClient.end(); ++it)
+		send((*it)->getFd(), RPL_JOIN.c_str(), RPL_JOIN.size(), 0);
+//TODO: ADD TOPIC
 	send(client.getFd(), RPL_NAMREPLY.c_str(), RPL_NAMREPLY.size(), 0);
-	send(client.getFd(), RPL_NAMREPLY1.c_str(), RPL_NAMREPLY1.size(), 0);
 	send(client.getFd(), RPL_ENDOFNAMES.c_str(), RPL_ENDOFNAMES.size(), 0);
 }
 

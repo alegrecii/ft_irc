@@ -2,6 +2,8 @@
 
 #include "utils.hpp"
 
+class Channel;
+
 class Client
 {
 private:
