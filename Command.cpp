@@ -184,9 +184,44 @@ void	Command::invite(Server &server, Client &client, std::vector<std::string> &v
 
 void	Command::topic(Server &server, Client &client, std::vector<std::string> &v)
 {
-	(void)server;
-	(void)client;
-	(void)v;
+	std::cout << "Command detected: TOPIC" << std::endl;
+	(void) server;
+	//std::cout << v[1] << std::endl;
+	if (v.size() < 1)
+	{
+		std::string error = "461 " + client.getNickname() + " TOPIC :Not enough parameters\r\n";
+		send(client.getFd(), error.c_str(), error.size(), 0);
+		return;
+	}
+	Channel *c = server.getChannel(v[0]);
+	if (!c)
+	{
+		std::string	ERR_NOSUCHCHANNEL = "403 " + client.getNickname() + " " + v[0] + ":No such channel \r\n";
+		send(client.getFd(), ERR_NOSUCHCHANNEL.c_str(), ERR_NOSUCHCHANNEL.size(), 0);
+		return;
+	}
+	if (!c->findClient(client.getNickname()))
+	{
+		std::string	ERR_NOTONCHANNEL = "442 " + client.getNickname() + " " + v[0] + ":You're not on that channel \r\n";
+		send(client.getFd(), ERR_NOTONCHANNEL.c_str(), ERR_NOTONCHANNEL.size(), 0);
+		return;
+	}
+	if (v.size() == 1)
+	{
+		std::string RPL_TOPIC = ":ircserv 332 " + client.getNickname() + " " + c->getName() + " :" + c->getTopic() + "\r\n";
+		send(client.getFd(), RPL_TOPIC.c_str(), RPL_TOPIC.size(), 0);
+		return ;
+	}
+	if (c->getTopicRestrict() && !c->isOperator(client.getNickname()))
+	{
+		std::string	ERR_CHANOPRIVSNEEDED = "482 " + client.getNickname() + " " + v[0] + ":You're not channel operator \r\n";
+		send(client.getFd(), ERR_CHANOPRIVSNEEDED.c_str(), ERR_CHANOPRIVSNEEDED.size(), 0);
+		return;
+	}
+	if (v.size() == 2)
+		c->setTopic(v[1]);
+	std::string TOPIC =	":" + client.getNickname() + "!" + client.getUser() + "@localhost TOPIC " + c->getName() + " :" + c->getTopic() + "\r\n";
+	c->sendToAll(TOPIC);
 }
 
 void	Command::mode(Server &server, Client &client, std::vector<std::string> &v)

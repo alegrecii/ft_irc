@@ -40,6 +40,7 @@ public:
 	void	welcomeMessage(Client &client);
 	void	setChannels(const std::string &name, const std::string &pass, Client &client);
 	void	sendJoin(const std::string &name, Client &client);
+	void	sendToAllClients(const std::string &msg);
 	std::string	findUsers(const std::string &name);
 };
 

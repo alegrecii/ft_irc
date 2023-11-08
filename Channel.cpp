@@ -5,7 +5,7 @@ Channel::Channel()
 }
 
 Channel::Channel(const std::string &name, const std::string &pass, Client *creator)
-: _name(name), _passKey(pass)
+: _name(name), _passKey(pass), _topicRestrict(false)
 {
 	if (creator)
 		_clientsOp[creator->getNickname()] = creator;
@@ -23,14 +23,30 @@ Channel& Channel::operator=(const Channel& obj)
 	return *this;
 }
 
-const std::string & Channel::getPasskey() const { return _passKey;}
+const std::string &Channel::getName() const{ return _name;}
 
+const std::string &Channel::getTopic() const { return _topic; }
+
+const std::string &Channel::getPasskey() const { return _passKey; }
+
+bool Channel::getTopicRestrict() const { return _topicRestrict; }
 
 void Channel::setClients(Client *client)
 {
 	if (!client)
 		return;
 	_clients[client->getNickname()] = client;
+}
+
+void Channel::setTopic(const std::string &newTopic){ _topic = newTopic; }
+
+void Channel::sendToAll(const std::string &msg) const
+{
+	std::vector<Client *>	all = getAllClients();
+	size_t					size = all.size();
+
+	for (size_t i = 0; i < size; i++)
+		send(all[i]->getFd(), msg.c_str(), msg.size(), 0);
 }
 
 void	Channel::deleteClientFromChannel(const std::string &nick)

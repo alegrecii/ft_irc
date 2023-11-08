@@ -34,11 +34,18 @@ Client *Server::getClient(const std::string &clName)
 
 void Server::updateNick(Client &client, const std::string &newName)
 {
+	std::string	oldName = client.getNickname();
 	client.setNikcname(newName);
 	if (client.getIsRegistered())
 	{
-		_clients.erase(client.getNickname());
+		_clients.erase(oldName);
 		_clients[newName] = &client;
+		//Update all channels
+
+		
+
+		std::string	NEW_NICK = ":" + oldName + "!" + client.getUser() + "@localhost NICK " + newName + "\r\n";
+		this->sendToAllClients(NEW_NICK);
 	}
 }
 
@@ -306,6 +313,8 @@ static void	fillParam(std::vector<std::string> &vParam, std::istringstream &iss)
 				else
 					vParam.push_back(param);
 			}
+			else
+				vParam.push_back("");
 		}
 		else
 			vParam.push_back(param);
@@ -350,25 +359,53 @@ std::string	Server::findUsers(const std::string &name)
 	return users;
 }
 
+void Server::sendToAllClients(const std::string &msg)
+{
+	for (std::map<std::string, Client *>::iterator	it = _clients.begin(); it != _clients.end(); ++it)
+	{
+		if (it->second)
+			send(it->second->getFd(), msg.c_str(), msg.size(), 0);
+	}
+}
+
 void	Server::sendJoin(const std::string &name, Client &client)
 {
 	std::string	users;
 	std::vector<Client *>	allClient = _channels[name]->getAllClients();
 	users += findUsers(name);
 
+	//JOIN
+
+	std::string RPL_JOIN = ":" + client.getNickname() + "!" + client.getUser() + "@localhost JOIN :" + name + "\r\n";
 	std::string RPL_NAMREPLY = ":ircserv 353 " + client.getNickname() + " = " + name + " :" + users + "\r\n";
 	std::string RPL_ENDOFNAMES = ":ircserv 366 " + client.getNickname() + " " + name + " :End of NAMES list\r\n";
-	std::string RPL_JOIN = ":" + client.getNickname() + "!" + client.getUser() + "@localhost JOIN :" + name + "\r\n";
 
 	for (std::vector<Client *>::iterator it = allClient.begin(); it != allClient.end(); ++it)
 		send((*it)->getFd(), RPL_JOIN.c_str(), RPL_JOIN.size(), 0);
-//TODO: ADD TOPIC
+
+	//TOPIC
+
+	std::string topic = _channels[name]->getTopic();
+	if (!topic.empty())
+	{
+		std::string RPL_TOPIC = ":ircserv 332 " + client.getNickname() + " " + name + " :" + topic + "\r\n";
+		send(client.getFd(), RPL_TOPIC.c_str(), RPL_TOPIC.size(), 0);
+	}
+	else
+	{
+		std::string	RPL_NOTOPIC = ":ircserv 331 " + client.getNickname() + " " + name + " :No topic is set\r\n";
+		send(client.getFd(), RPL_NOTOPIC.c_str(), RPL_NOTOPIC.size(), 0);
+	}
+
+	//LIST
 	send(client.getFd(), RPL_NAMREPLY.c_str(), RPL_NAMREPLY.size(), 0);
 	send(client.getFd(), RPL_ENDOFNAMES.c_str(), RPL_ENDOFNAMES.size(), 0);
 }
 
 void	Server::setChannels(const std::string &name, const std::string &pass, Client &client)
 {
+
+
 	if (_channels.find(name) == _channels.end())
 	{
 		_channels.insert(std::make_pair(name, new Channel(name, pass, &client)));

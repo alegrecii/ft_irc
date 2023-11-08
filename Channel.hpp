@@ -33,7 +33,8 @@ public:
 	bool								getTopicRestrict() const;
 	bool								getIsLimit() const;
 	void								setClients(Client *client);
-	void								sentToAll(Server &s, const std::string &msg) const;
+	void								setTopic(const std::string &newTopic);
+	void								sendToAll(const std::string &msg) const;
 
 	std::vector<Client *>				getAllClients() const;
 	std::map<std::string, Client *>		getClientsOp() const;
