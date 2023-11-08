@@ -14,7 +14,7 @@ private:
 
 	bool						_inviteOnly;
 	bool						_topicRestrict;
-	bool						_isLimit;
+	int							_clientsLimit;
 
 	std::map<std::string, Client*>	_clients;
 	std::map<std::string, Client*>	_clientsOp;

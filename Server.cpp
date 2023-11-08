@@ -9,7 +9,7 @@ Server::Server(const std::string &port, const std::string &psw) : _port(portConv
 	_commands["KICK"] = Command::kick;
 	_commands["INVITE"] = Command::invite;
 	_commands["TOPIC"] = Command::topic;
-	_commands["MODE"] = Command::mode;
+	// _commands["MODE"] = Command::mode;
 	_commands["NICK"] = Command::nick;
 	_commands["PASS"] = Command::pass;
 	_commands["USER"] = Command::user;
@@ -44,6 +44,10 @@ void Server::updateNick(Client &client, const std::string &newName)
 		//Update nick in server
 		_clients.erase(oldName);
 		_clients[newName] = &client;
+		//Update all channels
+
+
+
 
 		//Update nick in all channels
 		std::vector<Channel *> joinedChannels = client.getJoinedChannels();
@@ -323,9 +327,9 @@ static void	fillParam(std::vector<std::string> &vParam, std::istringstream &iss)
 				else
 					vParam.push_back(param);
 			}
-			else
-				vParam.push_back("");
 		}
+		else
+			vParam.push_back(param);
 	}
 }
 
@@ -406,10 +410,9 @@ void	Server::sendJoin(const std::string &name, Client &client)
 
 void	Server::setChannels(const std::string &name, const std::string &pass, Client &client)
 {
-
-
 	if (_channels.find(name) == _channels.end())
 	{
+		std::cout << "ENTRO" << std::endl;
 		Channel	*ch = new Channel(name, pass, &client);
 		_channels.insert(std::make_pair(name, ch));
 		client.addChannel(ch);
@@ -447,7 +450,7 @@ void	Server::status()
 		std::cout << "-" << it->second->getNickname() << std::endl;
 
 	std::cout << "CHANNELS: " << std::endl;
-	
+
 	for (std::map<std::string, Channel*>::iterator it = _channels.begin(); it != _channels.end(); ++it )
 	{
 		std::cout << it->second->getName() << std::endl;

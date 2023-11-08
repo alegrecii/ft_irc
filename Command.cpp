@@ -68,7 +68,7 @@ void	Command::nick(Server &server, Client &client, std::vector<std::string> &v)
 
 void	Command::join(Server &server, Client &client, std::vector<std::string> &v)
 {
-	std::cout << "Command detected: JOIN" << std::endl;
+	std::cout << "Command detected: JOIN con " << v.size() << " parameters" << std::endl;
 	if (v.size() < 1)
 	{
 		std::string error = ":" + client.getNickname() + " 461 :Not enough parameters\r\n";
@@ -79,6 +79,7 @@ void	Command::join(Server &server, Client &client, std::vector<std::string> &v)
 	std::istringstream param1(v[0]);
 	if (v.size() == 2)
 	{
+		std::cout << "POOPOO" << std::endl;
 		std::istringstream param2(v[1]);
 		while(std::getline(param1, name, ','))
 		{
@@ -95,6 +96,7 @@ void	Command::join(Server &server, Client &client, std::vector<std::string> &v)
 	{
 		while(std::getline(param1, name, ','))
 		{
+			std::cout << "CIAO" << std::endl;
 			if (name[0] == '#' || name[0] == '&')
 			{
 				pass = "";
@@ -193,7 +195,6 @@ void	Command::topic(Server &server, Client &client, std::vector<std::string> &v)
 {
 	std::cout << "Command detected: TOPIC" << std::endl;
 	(void) server;
-	//std::cout << v[1] << std::endl;
 	if (v.size() < 1)
 	{
 		std::string error = "461 " + client.getNickname() + " TOPIC :Not enough parameters\r\n";
@@ -233,8 +234,39 @@ void	Command::topic(Server &server, Client &client, std::vector<std::string> &v)
 
 void	Command::mode(Server &server, Client &client, std::vector<std::string> &v)
 {
-	(void)server;
-	(void)client;
-	(void)v;
+	std::cout << "Command detected: MODE" << std::endl;
+	if (v.size() < 2)
+	{
+		std::string error = "461 " + client.getNickname() + " TOPIC :Not enough parameters\r\n";
+		send(client.getFd(), error.c_str(), error.size(), 0);
+		return;
+	}
+	Channel *c = server.getChannel(v[0]);
+	if (!c)
+	{
+		std::string	ERR_NOSUCHCHANNEL = "403 " + client.getNickname() + " " + v[0] + ":No such channel \r\n";
+		send(client.getFd(), ERR_NOSUCHCHANNEL.c_str(), ERR_NOSUCHCHANNEL.size(), 0);
+		return;
+	}
+	if (!c->findClient(client.getNickname()))
+	{
+		std::string	ERR_NOTONCHANNEL = "442 " + client.getNickname() + " " + v[0] + ":You're not on that channel \r\n";
+		send(client.getFd(), ERR_NOTONCHANNEL.c_str(), ERR_NOTONCHANNEL.size(), 0);
+		return;
+	}
+	if (!c->isOperator(client.getNickname()))
+	{
+		std::string	ERR_CHANOPRIVSNEEDED = "482 " + client.getNickname() + " " + v[0] + ":You're not channel operator \r\n";
+		send(client.getFd(), ERR_CHANOPRIVSNEEDED.c_str(), ERR_CHANOPRIVSNEEDED.size(), 0);
+		return;
+	}
+	// salvare parametro 1 in una stringa
+	// variabile bool sul segno, parte da +
+	// variabile int che scorre i parametri del vettore
+	// check sulla stringa su quanti parametri ha bisogno e sui char, se mon sono quelli implementati da noi lanciare RPL 472 e uscire
+	//se i parametri sono < di quel mumero uscire subito e dare "[19:42] [Error] MODE: This command requires more parameters" e uscire.
+	//scorrere la stringa : se si trova un segno cambiare la variabile bool, se si trova una delle lettere che noi vogliamo far partire il mode(se questo ha bisogno di un argomento fare ++ sulla variabile counter)
+	/*by AleGreci*/
 }
+
 
