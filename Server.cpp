@@ -13,6 +13,7 @@ Server::Server(const std::string &port, const std::string &psw) : _port(portConv
 	_commands["NICK"] = Command::nick;
 	_commands["PASS"] = Command::pass;
 	_commands["USER"] = Command::user;
+	_commands["STATUS"] = Command::status;
 }
 
 Server::~Server()
@@ -34,19 +35,28 @@ Client *Server::getClient(const std::string &clName)
 
 void Server::updateNick(Client &client, const std::string &newName)
 {
+	status();
 	std::string	oldName = client.getNickname();
+	// Set nick in client object
 	client.setNikcname(newName);
 	if (client.getIsRegistered())
 	{
+		//Update nick in server
 		_clients.erase(oldName);
 		_clients[newName] = &client;
-		//Update all channels
 
-		
+		//Update nick in all channels
+		std::vector<Channel *> joinedChannels = client.getJoinedChannels();
+		for (size_t i = 0; i < joinedChannels.size(); ++i)
+		{
+			joinedChannels[i]->updateNickInChannel(oldName, newName);
+		}
 
+		//Send update to all clients
 		std::string	NEW_NICK = ":" + oldName + "!" + client.getUser() + "@localhost NICK " + newName + "\r\n";
 		this->sendToAllClients(NEW_NICK);
 	}
+	status();
 }
 
 Client	*Server::getClientByFd(int fd) const
@@ -316,8 +326,6 @@ static void	fillParam(std::vector<std::string> &vParam, std::istringstream &iss)
 			else
 				vParam.push_back("");
 		}
-		else
-			vParam.push_back(param);
 	}
 }
 
@@ -391,12 +399,6 @@ void	Server::sendJoin(const std::string &name, Client &client)
 		std::string RPL_TOPIC = ":ircserv 332 " + client.getNickname() + " " + name + " :" + topic + "\r\n";
 		send(client.getFd(), RPL_TOPIC.c_str(), RPL_TOPIC.size(), 0);
 	}
-	else
-	{
-		std::string	RPL_NOTOPIC = ":ircserv 331 " + client.getNickname() + " " + name + " :No topic is set\r\n";
-		send(client.getFd(), RPL_NOTOPIC.c_str(), RPL_NOTOPIC.size(), 0);
-	}
-
 	//LIST
 	send(client.getFd(), RPL_NAMREPLY.c_str(), RPL_NAMREPLY.size(), 0);
 	send(client.getFd(), RPL_ENDOFNAMES.c_str(), RPL_ENDOFNAMES.size(), 0);
@@ -408,7 +410,9 @@ void	Server::setChannels(const std::string &name, const std::string &pass, Clien
 
 	if (_channels.find(name) == _channels.end())
 	{
-		_channels.insert(std::make_pair(name, new Channel(name, pass, &client)));
+		Channel	*ch = new Channel(name, pass, &client);
+		_channels.insert(std::make_pair(name, ch));
+		client.addChannel(ch);
 		sendJoin(name, client);
 	}
 	else
@@ -416,12 +420,44 @@ void	Server::setChannels(const std::string &name, const std::string &pass, Clien
 		if (!_channels[name]->getPasskey().compare(pass))
 		{
 			_channels[name]->setClients(&client);
+			client.addChannel(_channels[name]);
 			sendJoin(name, client);
 		}
 		else
 		{
 			std::string	ERR_BADCHANNELKEY = "475 " + client.getNickname() + " " + name + " :Cannot join channel!\r\n";
 			send(client.getFd(), ERR_BADCHANNELKEY.c_str(), ERR_BADCHANNELKEY.size(), 0);
+		}
+	}
+}
+
+void	Server::status()
+{
+
+	std::cout << "LIST NOT REGISTERED" << std::endl;
+
+	for (std::list<Client *>::iterator it = _clientsNotRegistered.begin(); it != _clientsNotRegistered.end(); ++it)
+	{
+		std::cout << "FD: " << (*it)->getFd() << std::endl;
+	}
+
+	std::cout << "CLIENTS: " << std::endl;
+
+	for (std::map<std::string, Client*>::iterator it = _clients.begin(); it != _clients.end(); ++it )
+		std::cout << "-" << it->second->getNickname() << std::endl;
+
+	std::cout << "CHANNELS: " << std::endl;
+	
+	for (std::map<std::string, Channel*>::iterator it = _channels.begin(); it != _channels.end(); ++it )
+	{
+		std::cout << it->second->getName() << std::endl;
+		std::vector<Client *> all = it->second->getAllClients();
+		for (size_t i = 0; i < all.size(); ++i)
+		{
+			if (it->second->isOperator(all[i]->getNickname()))
+				std::cout << "	-@" << all[i]->getNickname() << std::endl;
+			else
+				std::cout << "	-" << all[i]->getNickname() << std::endl;
 		}
 	}
 }

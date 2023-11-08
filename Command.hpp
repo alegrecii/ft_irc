@@ -32,6 +32,7 @@ private:
 	static void		msgToClient(Server &s, Client &c, const std::string &targetClient, const std::string &msg);
 
 public:
+	static void		status(Server &server, Client &client, std::vector<std::string> &v);
 	static void		user(Server &server, Client &client, std::vector<std::string> &v);
 	static void		pass(Server &server, Client &client, std::vector<std::string> &v);
 	static void		nick(Server &server, Client &client, std::vector<std::string> &v);

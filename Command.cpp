@@ -1,5 +1,12 @@
 #include "Command.hpp"
 
+void	Command::status(Server &server, Client &client, std::vector<std::string> &v)
+{
+	(void)client;
+	(void)v;
+	server.status();
+}
+
 void Command::user(Server &server, Client &client, std::vector<std::string> &v)
 {
 	(void)server;

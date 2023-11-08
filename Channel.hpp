@@ -41,4 +41,5 @@ public:
 	Client*								findClient(const std::string &cl);
 	bool								isOperator(const std::string &cl);
 	void								deleteClientFromChannel(const std::string &cl);
+	void								updateNickInChannel(const std::string &oldName, const std::string &newName);
 };

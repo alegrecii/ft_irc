@@ -41,6 +41,18 @@ const int &Client::getFd() const{return _fd;}
 
 const std::string &Client::getBuffer() const {return _buffer;}
 
+const std::vector<Channel *>	&Client::getJoinedChannels() const { return _joinedChannels; }
+
+void	Client::addChannel(Channel *channel)
+{
+	if (!channel)
+		return;
+	if (std::find(_joinedChannels.begin(), _joinedChannels.end(), channel) == _joinedChannels.end())
+	{
+		_joinedChannels.push_back(channel);
+	}
+}
+
 void Client::setBuffer(const std::string &buffer) {_buffer = buffer;}
 
 void Client::deleteFromChannels()

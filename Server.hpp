@@ -42,5 +42,7 @@ public:
 	void	sendJoin(const std::string &name, Client &client);
 	void	sendToAllClients(const std::string &msg);
 	std::string	findUsers(const std::string &name);
+
+	void	status();
 };
 
