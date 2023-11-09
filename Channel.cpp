@@ -40,6 +40,11 @@ void Channel::setClients(Client *client)
 
 void Channel::setTopic(const std::string &newTopic){ _topic = newTopic; }
 
+unsigned int	Channel::getSize() const
+{
+	return (_clients.size() + _clientsOp.size());
+}
+
 void Channel::sendToAll(const std::string &msg) const
 {
 	std::vector<Client *>	all = getAllClients();

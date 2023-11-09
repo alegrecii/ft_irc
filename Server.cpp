@@ -100,7 +100,7 @@ void Server::deleteClient(Client *client)
 	if (!client)
 		return;
 	if (client->getIsRegistered())
-		client->deleteFromChannels();
+		client->deleteFromChannels(*this);
 	else
 		_clientsNotRegistered.remove(client);
 	delete(client);
@@ -108,6 +108,17 @@ void Server::deleteClient(Client *client)
 	std::string		clientName = client->getNickname();
 	_clients.erase(clientName);
 	delete(client);
+}
+
+void	Server::deleteChannel(const std::string &chName)
+{
+	std::map<std::string, Channel *>::iterator	it = _channels.find(chName);
+
+	if (it != _channels.end())
+	{
+		delete(it->second);
+		_channels.erase(it);
+	}
 }
 
 void	Server::run()

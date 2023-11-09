@@ -32,6 +32,9 @@ public:
 	Channel	*getChannel(const std::string &chName);
 	Client	*getClientByFd(int fd) const;
 	void	deleteClient(Client *client);
+	void	deleteClient(const std::string &clName);
+	void	deleteChannel(Channel *channel);
+	void	deleteChannel(const std::string &chName);
 
 	void	run();
 	void	msgAnalyzer(Client &client, const char *msg);

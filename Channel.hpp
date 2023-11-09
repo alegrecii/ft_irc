@@ -34,8 +34,10 @@ public:
 	bool								getIsLimit() const;
 	void								setClients(Client *client);
 	void								setTopic(const std::string &newTopic);
+
 	void								sendToAll(const std::string &msg) const;
 
+	unsigned int						getSize() const;
 	std::vector<Client *>				getAllClients() const;
 	std::map<std::string, Client *>		getClientsOp() const;
 	Client*								findClient(const std::string &cl);

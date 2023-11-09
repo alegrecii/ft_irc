@@ -132,6 +132,13 @@ void	Command::msgToChannel(Server &s, Client &c, const std::string &chName, cons
 		return;
 	}
 
+	if (!ch->findClient(c.getNickname()))
+	{
+		std::string	ERR_NOTONCHANNEL = "442 " + c.getNickname() + " " + chName + " :You're not on that channel \r\n";
+		send(c.getFd(), ERR_NOTONCHANNEL.c_str(), ERR_NOTONCHANNEL.size(), 0);
+		return;
+	}
+
 	std::vector<Client *>	allClients = ch->getAllClients();
 	for(size_t i = 0; i < allClients.size(); i++)
 	{
@@ -179,16 +186,94 @@ void	Command::ping(Server &server, Client &client, std::vector<std::string> &v)
 
 void	Command::kick(Server &server, Client &client, std::vector<std::string> &v)
 {
-	(void)server;
-	(void)client;
-	(void)v;
+	if (v.size() < 2)
+	{
+		std::string error = "461 " + client.getNickname() + " KICK :Not enough parameters\r\n";
+		send(client.getFd(), error.c_str(), error.size(), 0);
+		return;
+	}
+	Channel *ch = server.getChannel(v[0]);
+	if (!ch)
+	{
+		std::string	ERR_NOSUCHCHANNEL = "403 " + client.getNickname() + " " + v[0] + " :No such channel \r\n";
+		send(client.getFd(), ERR_NOSUCHCHANNEL.c_str(), ERR_NOSUCHCHANNEL.size(), 0);
+		return;
+	}
+	if (!ch->findClient(client.getNickname()))
+	{
+		std::string	ERR_NOTONCHANNEL = "442 " + client.getNickname() + " " + v[0] + " :You're not on that channel \r\n";
+		send(client.getFd(), ERR_NOTONCHANNEL.c_str(), ERR_NOTONCHANNEL.size(), 0);
+		return;
+	}
+	if (!ch->isOperator(client.getNickname()))
+	{
+		std::string	ERR_CHANOPRIVSNEEDED = "482 " + client.getNickname() + " " + v[0] + " :You're not channel operator \r\n";
+		send(client.getFd(), ERR_CHANOPRIVSNEEDED.c_str(), ERR_CHANOPRIVSNEEDED.size(), 0);
+		return;
+	}
+	std::string	userToBan = v[1];
+	Client	*toBan = ch->findClient(userToBan);
+	if (!toBan)
+	{
+		std::string ERR_USERNOTINCHANNEL = "441 " + client.getNickname() + " " + userToBan + " " + ch->getName() + " :User not in this channel.\r\n";
+		send(client.getFd(), ERR_USERNOTINCHANNEL.c_str(), ERR_USERNOTINCHANNEL.size(), 0);
+		return ;
+	}
+	// KICK MESSAGE TO CLIENTS IN CHANNEL
+	std::string KICK_MSG = ":" + client.getNickname() + "!" + client.getUser() + "@localhost KICK " + ch->getName() + " " + userToBan + "\r\n";
+	ch->sendToAll(KICK_MSG);
+	ch->deleteClientFromChannel(userToBan); 
+	// send(client.getFd(), KICK_MSG.c_str(), KICK_MSG.size(), 0);
 }
 
 void	Command::invite(Server &server, Client &client, std::vector<std::string> &v)
 {
-	(void)server;
-	(void)client;
-	(void)v;
+	if (v.size() < 2)
+	{
+		std::string error = "461 " + client.getNickname() + " INVITE :Not enough parameters\r\n";
+		send(client.getFd(), error.c_str(), error.size(), 0);
+		return;
+	}
+
+	std::string	nickToInvite = v[0];
+	std::string channel = v[1];
+
+	Client	*toInvite = server.getClient(nickToInvite);
+	Channel *toJoin = server.getChannel(channel);
+
+	if (!toInvite)
+	{
+		std::string ERR_NOSUCHNICK = "401 " + client.getNickname() + " " + nickToInvite + " :No such nick\r\n";
+		send(client.getFd(), ERR_NOSUCHNICK.c_str(), ERR_NOSUCHNICK.size(), 0);
+		return ;
+	}
+	if (!toJoin)
+	{
+		std::string	ERR_NOSUCHCHANNEL = "403 " + client.getNickname() + " " + channel + " :No such channel \r\n";
+		send(client.getFd(), ERR_NOSUCHCHANNEL.c_str(), ERR_NOSUCHCHANNEL.size(), 0);
+		return ;
+	}
+	if (!toJoin->findClient(client.getNickname()))
+	{
+		std::string	ERR_NOTONCHANNEL = "442 " + client.getNickname() + " " + channel + " :You're not on that channel \r\n";
+		send(client.getFd(), ERR_NOTONCHANNEL.c_str(), ERR_NOTONCHANNEL.size(), 0);
+		return;
+	}
+	if (!toJoin->isOperator(client.getNickname()))
+	{
+		std::string	ERR_CHANOPRIVSNEEDED = "482 " + client.getNickname() + " " + channel + " :You're not channel operator \r\n";
+		send(client.getFd(), ERR_CHANOPRIVSNEEDED.c_str(), ERR_CHANOPRIVSNEEDED.size(), 0);
+		return;
+	}
+	if (toJoin->findClient(toInvite->getNickname()))
+	{
+		std::string ERR_USERONCHANNEL = "443 " + client.getNickname() + " " + nickToInvite + " " + toJoin->getName() + " :is already on channel\r\n";
+		send(client.getFd(), ERR_USERONCHANNEL.c_str(), ERR_USERONCHANNEL.size(), 0);
+		return;
+	}
+
+	std::string INVITE_MSG = ":" + client.getNickname() + "!" + client.getUser() + "@localhost INVITE " + nickToInvite + " " + channel + "\r\n";
+	send(toInvite->getFd(), INVITE_MSG.c_str(), INVITE_MSG.size(), 0);
 }
 
 void	Command::topic(Server &server, Client &client, std::vector<std::string> &v)
@@ -204,13 +289,13 @@ void	Command::topic(Server &server, Client &client, std::vector<std::string> &v)
 	Channel *c = server.getChannel(v[0]);
 	if (!c)
 	{
-		std::string	ERR_NOSUCHCHANNEL = "403 " + client.getNickname() + " " + v[0] + ":No such channel \r\n";
+		std::string	ERR_NOSUCHCHANNEL = "403 " + client.getNickname() + " " + v[0] + " :No such channel \r\n";
 		send(client.getFd(), ERR_NOSUCHCHANNEL.c_str(), ERR_NOSUCHCHANNEL.size(), 0);
 		return;
 	}
 	if (!c->findClient(client.getNickname()))
 	{
-		std::string	ERR_NOTONCHANNEL = "442 " + client.getNickname() + " " + v[0] + ":You're not on that channel \r\n";
+		std::string	ERR_NOTONCHANNEL = "442 " + client.getNickname() + " " + v[0] + " :You're not on that channel \r\n";
 		send(client.getFd(), ERR_NOTONCHANNEL.c_str(), ERR_NOTONCHANNEL.size(), 0);
 		return;
 	}
@@ -222,7 +307,7 @@ void	Command::topic(Server &server, Client &client, std::vector<std::string> &v)
 	}
 	if (c->getTopicRestrict() && !c->isOperator(client.getNickname()))
 	{
-		std::string	ERR_CHANOPRIVSNEEDED = "482 " + client.getNickname() + " " + v[0] + ":You're not channel operator \r\n";
+		std::string	ERR_CHANOPRIVSNEEDED = "482 " + client.getNickname() + " " + v[0] + " :You're not channel operator \r\n";
 		send(client.getFd(), ERR_CHANOPRIVSNEEDED.c_str(), ERR_CHANOPRIVSNEEDED.size(), 0);
 		return;
 	}
@@ -244,19 +329,19 @@ void	Command::mode(Server &server, Client &client, std::vector<std::string> &v)
 	Channel *c = server.getChannel(v[0]);
 	if (!c)
 	{
-		std::string	ERR_NOSUCHCHANNEL = "403 " + client.getNickname() + " " + v[0] + ":No such channel \r\n";
+		std::string	ERR_NOSUCHCHANNEL = "403 " + client.getNickname() + " " + v[0] + " :No such channel \r\n";
 		send(client.getFd(), ERR_NOSUCHCHANNEL.c_str(), ERR_NOSUCHCHANNEL.size(), 0);
 		return;
 	}
 	if (!c->findClient(client.getNickname()))
 	{
-		std::string	ERR_NOTONCHANNEL = "442 " + client.getNickname() + " " + v[0] + ":You're not on that channel \r\n";
+		std::string	ERR_NOTONCHANNEL = "442 " + client.getNickname() + " " + v[0] + " :You're not on that channel \r\n";
 		send(client.getFd(), ERR_NOTONCHANNEL.c_str(), ERR_NOTONCHANNEL.size(), 0);
 		return;
 	}
 	if (!c->isOperator(client.getNickname()))
 	{
-		std::string	ERR_CHANOPRIVSNEEDED = "482 " + client.getNickname() + " " + v[0] + ":You're not channel operator \r\n";
+		std::string	ERR_CHANOPRIVSNEEDED = "482 " + client.getNickname() + " " + v[0] + " :You're not channel operator \r\n";
 		send(client.getFd(), ERR_CHANOPRIVSNEEDED.c_str(), ERR_CHANOPRIVSNEEDED.size(), 0);
 		return;
 	}

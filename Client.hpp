@@ -3,6 +3,7 @@
 #include "utils.hpp"
 
 class Channel;
+class Server;
 
 class Client
 {
@@ -37,6 +38,6 @@ public:
 
 	void				addChannel(Channel *channel);
 	const std::vector<Channel *>		&getJoinedChannels() const;
-	void				deleteFromChannels();
+	void				deleteFromChannels(Server &server);
 };
 

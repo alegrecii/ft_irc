@@ -55,14 +55,18 @@ void	Client::addChannel(Channel *channel)
 
 void Client::setBuffer(const std::string &buffer) {_buffer = buffer;}
 
-void Client::deleteFromChannels()
+void Client::deleteFromChannels(Server &server)
 {
+	Channel *tmpCh = NULL;
+
 	for(std::vector<Channel *>::iterator it = _joinedChannels.begin(); it != _joinedChannels.end(); ++it)
 	{
 		if(*it)
 		{
-			(*it)->deleteClientFromChannel(_nickname);
-
+			tmpCh = *it;
+			(tmpCh)->deleteClientFromChannel(_nickname);
+			if (!tmpCh->getSize())
+				server.deleteChannel(tmpCh->getName());
 		}
 	}
 }
