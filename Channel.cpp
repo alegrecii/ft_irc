@@ -55,7 +55,7 @@ void Channel::sendToAll(const std::string &msg) const
 }
 
 void	Channel::updateNickInChannel(const std::string &old, const std::string &newName)
-{	
+{
 	std::cout << "UPDATE NICK IN CHANNEL CALLED" << std::endl;
 	if (!findClient(old))
 	{

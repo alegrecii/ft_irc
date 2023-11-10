@@ -222,7 +222,7 @@ void	Command::kick(Server &server, Client &client, std::vector<std::string> &v)
 	// KICK MESSAGE TO CLIENTS IN CHANNEL
 	std::string KICK_MSG = ":" + client.getNickname() + "!" + client.getUser() + "@localhost KICK " + ch->getName() + " " + userToBan + "\r\n";
 	ch->sendToAll(KICK_MSG);
-	ch->deleteClientFromChannel(userToBan); 
+	ch->deleteClientFromChannel(userToBan);
 	// send(client.getFd(), KICK_MSG.c_str(), KICK_MSG.size(), 0);
 }
 
@@ -354,4 +354,41 @@ void	Command::mode(Server &server, Client &client, std::vector<std::string> &v)
 	/*by AleGreci*/
 }
 
-
+void Command::part(Server &server, Client &client, std::vector<std::string> &v)
+{
+	std::cout << "Command detected: PART" << std::endl;
+	if (v.size() < 1)
+	{
+		std::string error = "461 " + client.getNickname() + " PART :Not enough parameters\r\n";
+		send(client.getFd(), error.c_str(), error.size(), 0);
+		return;
+	}
+	std::string param = v[0];
+	std::vector<std::string> split = ft_split(param, ',');
+	for(std::vector<std::string>::iterator it = split.begin(); it != split.end(); ++it)
+	{
+		std::string name = *it;
+		if (name[0] == '#' || name[0] == '&')
+		{
+			std::cout << name << std::endl;
+			Channel *c = server.getChannel(name);
+			if (!c)
+			{
+				std::string	ERR_NOSUCHCHANNEL = "403 " + client.getNickname() + " " + v[0] + " :No such channel \r\n";
+				send(client.getFd(), ERR_NOSUCHCHANNEL.c_str(), ERR_NOSUCHCHANNEL.size(), 0);
+				return;
+			}
+			if (!c->findClient(client.getNickname()))
+			{
+				std::string	ERR_NOTONCHANNEL = "442 " + client.getNickname() + " " + v[0] + " :You're not on that channel \r\n";
+				send(client.getFd(), ERR_NOTONCHANNEL.c_str(), ERR_NOTONCHANNEL.size(), 0);
+				return;
+			}
+			std::string RPL_PART = ":" + client.getNickname() + "!" + client.getUser() + "@localhost PART " + c->getName() + "\r\n";
+			c->sendToAll(RPL_PART);
+			c->deleteClientFromChannel(client.getNickname());
+			if (c->getSize() == 0)
+				server.deleteChannel(c->getName());
+		}
+	}
+}

@@ -14,6 +14,7 @@ Server::Server(const std::string &port, const std::string &psw) : _port(portConv
 	_commands["PASS"] = Command::pass;
 	_commands["USER"] = Command::user;
 	_commands["STATUS"] = Command::status;
+	_commands["PART"] = Command::part;
 }
 
 Server::~Server()

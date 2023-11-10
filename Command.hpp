@@ -43,4 +43,5 @@ public:
 	static void		invite(Server &server, Client &client, std::vector<std::string> &v);
 	static void		topic(Server &server, Client &client, std::vector<std::string> &v);
 	static void		mode(Server &server, Client &client, std::vector<std::string> &v);
+	static void		part(Server &server, Client &client, std::vector<std::string> &v);
 };
