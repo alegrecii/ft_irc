@@ -392,3 +392,58 @@ void Command::part(Server &server, Client &client, std::vector<std::string> &v)
 		}
 	}
 }
+
+
+void	Command::who(Server &server, Client &client, std::vector<std::string> &v)
+{
+	if (!v.size())
+		return;
+
+	Channel	*ch = NULL;
+	Client	*c = NULL;
+
+	std::string	mask = v[0];
+	std::string	RPL_WHOREPLY;
+
+	if (mask[0] == '#')
+	{
+		ch = server.getChannel(mask);
+		if (!ch)
+			return;
+		RPL_WHOREPLY = ":ircserv 352 " + client.getNickname() + " " + ch->getName() + " " + client.getUser() + " host ircserv " + client.getNickname() + " H :0 " + client.getUser() + "\r\n";
+	}
+	else
+	{
+		c = server.getClient(mask);
+		if (!c)
+			return;
+		RPL_WHOREPLY = ":ircserv 352 " + client.getNickname() + " * " + client.getUser() + " host ircserv " + client.getNickname() + " H :1 " + client.getUser() + "\r\n";
+	}
+	std::string	RPL_ENDOFWHO = ":ircserv 315 " + client.getNickname() + " " + mask + " :End of WHO list\r\n";
+	send(client.getFd(), RPL_WHOREPLY.c_str(), RPL_WHOREPLY.size(), 0);
+	send(client.getFd(), RPL_ENDOFWHO.c_str(), RPL_ENDOFWHO.size(), 0);
+}
+
+void	Command::userhost(Server &server, Client &client, std::vector<std::string> &v)
+{
+	if (!v.size())
+	{
+		std::string error = "461 " + client.getNickname() + " USERHOST :Not enough parameters\r\n";
+		send(client.getFd(), error.c_str(), error.size(), 0);
+		return;
+	}
+
+	std::string users;
+
+	for (size_t i = 0; i < v.size() && i < 5; i++)
+	{
+		Client	*c = server.getClient(v[i]);
+		if (c)
+		{
+			users += c->getNickname() + " ";	
+		}
+	}
+
+	std::string	RPL_USERHOST = ":ircserv 302 " + users + "\r\n";
+	send(client.getFd(), RPL_USERHOST.c_str(), RPL_USERHOST.size(), 0);
+}

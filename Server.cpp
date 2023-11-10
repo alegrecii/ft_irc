@@ -15,6 +15,8 @@ Server::Server(const std::string &port, const std::string &psw) : _port(portConv
 	_commands["USER"] = Command::user;
 	_commands["STATUS"] = Command::status;
 	_commands["PART"] = Command::part;
+	// _commands["WHO"] = Command::who;
+	// _commands["USERHOST"] = Command::userhost;
 }
 
 Server::~Server()
@@ -36,7 +38,6 @@ Client *Server::getClient(const std::string &clName)
 
 void Server::updateNick(Client &client, const std::string &newName)
 {
-	status();
 	std::string	oldName = client.getNickname();
 	// Set nick in client object
 	client.setNikcname(newName);
@@ -61,7 +62,6 @@ void Server::updateNick(Client &client, const std::string &newName)
 		std::string	NEW_NICK = ":" + oldName + "!" + client.getUser() + "@localhost NICK " + newName + "\r\n";
 		this->sendToAllClients(NEW_NICK);
 	}
-	status();
 }
 
 Client	*Server::getClientByFd(int fd) const
@@ -398,7 +398,7 @@ void	Server::sendJoin(const std::string &name, Client &client)
 	std::vector<Client *>	allClient = _channels[name]->getAllClients();
 	users += findUsers(name);
 
-	//JOIN
+	//JOIN_RPL
 
 	std::string RPL_JOIN = ":" + client.getNickname() + "!" + client.getUser() + "@localhost JOIN :" + name + "\r\n";
 	std::string RPL_NAMREPLY = ":ircserv 353 " + client.getNickname() + " = " + name + " :" + users + "\r\n";
@@ -407,7 +407,7 @@ void	Server::sendJoin(const std::string &name, Client &client)
 	for (std::vector<Client *>::iterator it = allClient.begin(); it != allClient.end(); ++it)
 		send((*it)->getFd(), RPL_JOIN.c_str(), RPL_JOIN.size(), 0);
 
-	//TOPIC
+	//TOPIC_RPL
 
 	std::string topic = _channels[name]->getTopic();
 	if (!topic.empty())
@@ -415,7 +415,7 @@ void	Server::sendJoin(const std::string &name, Client &client)
 		std::string RPL_TOPIC = ":ircserv 332 " + client.getNickname() + " " + name + " :" + topic + "\r\n";
 		send(client.getFd(), RPL_TOPIC.c_str(), RPL_TOPIC.size(), 0);
 	}
-	//LIST
+	//LIST_RPL
 	send(client.getFd(), RPL_NAMREPLY.c_str(), RPL_NAMREPLY.size(), 0);
 	send(client.getFd(), RPL_ENDOFNAMES.c_str(), RPL_ENDOFNAMES.size(), 0);
 }

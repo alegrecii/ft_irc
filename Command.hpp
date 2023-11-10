@@ -6,22 +6,6 @@ class Server;
 
 class Client;
 
-/*
-	-USER
-	-NICK
-	-PASS
-
-	-JOIN
-	-PRIVMSG
-	-PING ?
-	-PONG
-
-	-KICK
-	-INVITE
-	-TOPIC
-	-MODE
-*/
-
 class Command
 {
 private:
@@ -44,4 +28,6 @@ public:
 	static void		topic(Server &server, Client &client, std::vector<std::string> &v);
 	static void		mode(Server &server, Client &client, std::vector<std::string> &v);
 	static void		part(Server &server, Client &client, std::vector<std::string> &v);
+	static void		who(Server &server, Client &client, std::vector<std::string> &v);
+	static void		userhost(Server &server, Client &client, std::vector<std::string> &v);
 };
