@@ -7,15 +7,15 @@ class Server;
 class Channel
 {
 private:
-	std::string					_name;
-	std::string					_passKey;
-	std::string					_topic;
-	unsigned int				_maxUsers;
+	std::string						_name;
+	std::string						_passKey;
+	std::string						_topic;
 
-	bool						_inviteOnly;
-	bool						_topicRestrict;
-	int							_clientsLimit;
+	bool							_inviteOnly;
+	bool							_topicRestrict;
+	int								_clientsLimit;
 
+	std::vector<Client *>			_invitedClients;
 	std::map<std::string, Client*>	_clients;
 	std::map<std::string, Client*>	_clientsOp;
 
@@ -32,11 +32,14 @@ public:
 	bool								getInviteOnly() const;
 	bool								getTopicRestrict() const;
 	bool								getIsLimit() const;
+	void								inviteHere(Client *client);
+	bool								isInvited(Client *client) const;
+	void								removeFromInvited(Client *client);
+	void								setInviteOnly(bool plus, Client &client);
 	void								setClients(Client *client);
+	void								setTopicRestrict(bool plus, Client &client);
 	void								setTopic(const std::string &newTopic);
-
 	void								sendToAll(const std::string &msg) const;
-
 	unsigned int						getSize() const;
 	std::vector<Client *>				getAllClients() const;
 	std::map<std::string, Client *>		getClientsOp() const;

@@ -67,6 +67,11 @@ void Client::deleteFromChannels(Server &server)
 			(tmpCh)->deleteClientFromChannel(_nickname);
 			if (!tmpCh->getSize())
 				server.deleteChannel(tmpCh->getName());
+			else
+			{
+				std::string RPL_PART = ":" + _nickname + "!" + _user + "@localhost QUIT :" + _nickname + " disconnected from the server\r\n";
+				tmpCh->sendToAll(RPL_PART);
+			}
 		}
 	}
 }

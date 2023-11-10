@@ -77,9 +77,9 @@ void	Command::join(Server &server, Client &client, std::vector<std::string> &v)
 	}
 	std::string	name, pass;
 	std::istringstream param1(v[0]);
+	
 	if (v.size() == 2)
 	{
-		std::cout << "POOPOO" << std::endl;
 		std::istringstream param2(v[1]);
 		while(std::getline(param1, name, ','))
 		{
@@ -96,7 +96,6 @@ void	Command::join(Server &server, Client &client, std::vector<std::string> &v)
 	{
 		while(std::getline(param1, name, ','))
 		{
-			std::cout << "CIAO" << std::endl;
 			if (name[0] == '#' || name[0] == '&')
 			{
 				pass = "";
@@ -274,6 +273,7 @@ void	Command::invite(Server &server, Client &client, std::vector<std::string> &v
 
 	std::string INVITE_MSG = ":" + client.getNickname() + "!" + client.getUser() + "@localhost INVITE " + nickToInvite + " " + channel + "\r\n";
 	send(toInvite->getFd(), INVITE_MSG.c_str(), INVITE_MSG.size(), 0);
+	toJoin->inviteHere(toInvite);
 }
 
 void	Command::topic(Server &server, Client &client, std::vector<std::string> &v)
@@ -320,9 +320,9 @@ void	Command::topic(Server &server, Client &client, std::vector<std::string> &v)
 void	Command::mode(Server &server, Client &client, std::vector<std::string> &v)
 {
 	std::cout << "Command detected: MODE" << std::endl;
-	if (v.size() < 2)
+	if (!v.size())
 	{
-		std::string error = "461 " + client.getNickname() + " TOPIC :Not enough parameters\r\n";
+		std::string error = "461 " + client.getNickname() + " MODE :Not enough parameters\r\n";
 		send(client.getFd(), error.c_str(), error.size(), 0);
 		return;
 	}
@@ -331,6 +331,11 @@ void	Command::mode(Server &server, Client &client, std::vector<std::string> &v)
 	{
 		std::string	ERR_NOSUCHCHANNEL = "403 " + client.getNickname() + " " + v[0] + " :No such channel \r\n";
 		send(client.getFd(), ERR_NOSUCHCHANNEL.c_str(), ERR_NOSUCHCHANNEL.size(), 0);
+		return;
+	}
+	//TODO:check mode con solo canale (v.size < 2)
+	if (v.size() < 2)
+	{
 		return;
 	}
 	if (!c->findClient(client.getNickname()))
@@ -345,6 +350,79 @@ void	Command::mode(Server &server, Client &client, std::vector<std::string> &v)
 		send(client.getFd(), ERR_CHANOPRIVSNEEDED.c_str(), ERR_CHANOPRIVSNEEDED.size(), 0);
 		return;
 	}
+	// salvare parametro 1 in una stringa
+	// variabile bool sul segno, parte da +
+	// variabile int che scorre i parametri del vettore
+	// check sulla stringa su quanti parametri ha bisogno e sui char, se mon sono quelli implementati da noi lanciare RPL 472 e uscire
+	//se i parametri sono < di quel mumero uscire subito e dare "[19:42] [Error] MODE: This command requires more parameters" e uscire.
+	//scorrere la stringa : se si trova un segno cambiare la variabile bool, se si trova una delle lettere che noi vogliamo far partire il mode(se questo ha bisogno di un argomento fare ++ sulla variabile counter)
+	/*by AleGreci*/
+
+	std::string modes = v[1];
+	bool plus = true;
+	int	paramCounter = 0;
+	for (size_t i = 0; modes[i];  i++)
+	{
+		if(modes[i] == '-')
+			plus = false;
+		else if(modes[i] == '+')
+			plus = true;
+		else if (modes[i] == 'o' || modes[i] == 'k' || (modes[i] == 'l' && plus))
+			paramCounter++;
+		else if (modes[i] != 'i' && modes[i] != 't' && modes[i] != 'l' && modes[i] != 'b')
+			{
+				std::string	ERR_UNKNOWNMODE = "472 " + client.getNickname() + " " + modes[i] + " :is unknown mode char to me \r\n";
+				send(client.getFd(), ERR_UNKNOWNMODE.c_str(), ERR_UNKNOWNMODE.size(), 0);
+				return;
+			}
+	}
+	if (paramCounter > static_cast<int>(v.size()) - 2)
+	{
+		std::string error = "461 " + client.getNickname() + " MODE :This command requires more parameters.\r\n";
+		send(client.getFd(), error.c_str(), error.size(), 0);
+		return;
+	}
+	paramCounter = 2;
+	for (size_t i = 0; modes[i];  i++)
+	{
+		if(modes[i] == '-')
+			plus = false;
+		else if(modes[i] == '+')
+			plus = true;
+		else if (modes[i] == 'i')
+		{
+			if (c->getInviteOnly() != plus)
+				c->setInviteOnly(plus, client);
+		}
+ 		else if (modes[i] == 't')
+		{
+			if (c->getTopicRestrict() != plus)
+				c->setTopicRestrict(plus, client);
+		}
+		// else if (modes[i] == 'k')
+		// {
+		// 		c->setPass(plus, client, v[paramCounter]);
+		// 		paramCounter++;
+		// }
+		// else if (modes[i] == 'o')
+		// {
+		// 	c->setOperator(plus, client, v[paramCounter]);
+		// 	paramCounter++;
+		// }
+		// else if (modes[i] == 'l')
+		// {
+		// 	if (plus)
+		// 	{
+		// 		c->setLimit(plus, client, v[paramCounter]);
+		// 		paramCounter++;
+		// 	}
+		// 	else
+		// 		c->setLimit(plus, client, "");
+			
+		// }
+		//...
+	}
+
 	// salvare parametro 1 in una stringa
 	// variabile bool sul segno, parte da +
 	// variabile int che scorre i parametri del vettore
@@ -447,3 +525,9 @@ void	Command::userhost(Server &server, Client &client, std::vector<std::string> 
 	std::string	RPL_USERHOST = ":ircserv 302 " + users + "\r\n";
 	send(client.getFd(), RPL_USERHOST.c_str(), RPL_USERHOST.size(), 0);
 }
+	// 	std::string	ERR_CHANOPRIVSNEEDED = "482 " + client.getNickname() + " " + v[0] + ":You're not channel operator \r\n";
+	// 	send(client.getFd(), ERR_CHANOPRIVSNEEDED.c_str(), ERR_CHANOPRIVSNEEDED.size(), 0);
+	// 	return;
+	// }
+
+

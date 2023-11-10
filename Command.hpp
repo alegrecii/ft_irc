@@ -3,7 +3,7 @@
 #include "utils.hpp"
 
 class Server;
-
+class Channel;
 class Client;
 
 class Command

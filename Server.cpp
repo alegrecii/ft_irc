@@ -104,8 +104,6 @@ void Server::deleteClient(Client *client)
 		client->deleteFromChannels(*this);
 	else
 		_clientsNotRegistered.remove(client);
-	delete(client);
-	std::cout << "Client disconnected." << std::endl;
 	std::string		clientName = client->getNickname();
 	_clients.erase(clientName);
 	delete(client);
@@ -203,7 +201,7 @@ void	Server::run()
 				{
 					epoll_ctl(epoll_fd, EPOLL_CTL_DEL, clientSocket, NULL);
 					close(clientSocket);
-					//deleteClient(c);
+					deleteClient(c);
 					// Send disconnection to client?
 					std::cout << "Client disconnected." << std::endl;
 				}
@@ -424,25 +422,35 @@ void	Server::setChannels(const std::string &name, const std::string &pass, Clien
 {
 	if (_channels.find(name) == _channels.end())
 	{
-		std::cout << "ENTRO" << std::endl;
-		Channel	*ch = new Channel(name, pass, &client);
+		Channel	*ch = new Channel(name, "", &client);
 		_channels.insert(std::make_pair(name, ch));
 		client.addChannel(ch);
 		sendJoin(name, client);
 	}
 	else
 	{
-		if (!_channels[name]->getPasskey().compare(pass))
+		if ( !_channels[name]->getPasskey().compare("") || !_channels[name]->getPasskey().compare(pass))
 		{
-			_channels[name]->setClients(&client);
-			client.addChannel(_channels[name]);
-			sendJoin(name, client);
+			if ((_channels[name]->getInviteOnly() && _channels[name]->isInvited(&client)) || !_channels[name]->getInviteOnly())
+			{
+				_channels[name]->setClients(&client);
+				client.addChannel(_channels[name]);
+				sendJoin(name, client);
+				if (_channels[name]->getInviteOnly())
+					_channels[name]->removeFromInvited(&client);
+			}
+			else
+			{
+				std::string ERR_INVITEONLYCHAN = "473 " + client.getNickname() + " " + name + " :Cannot join channel (+i)\r\n";
+				send(client.getFd(), ERR_INVITEONLYCHAN.c_str(), ERR_INVITEONLYCHAN.size(), 0);
+			}
 		}
 		else
 		{
-			std::string	ERR_BADCHANNELKEY = "475 " + client.getNickname() + " " + name + " :Cannot join channel!\r\n";
+			std::string	ERR_BADCHANNELKEY = "475 " + client.getNickname() + " " + name + " :Cannot join channel (+k)!\r\n";
 			send(client.getFd(), ERR_BADCHANNELKEY.c_str(), ERR_BADCHANNELKEY.size(), 0);
 		}
+		
 	}
 }
 

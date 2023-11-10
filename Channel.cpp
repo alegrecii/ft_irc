@@ -5,7 +5,7 @@ Channel::Channel()
 }
 
 Channel::Channel(const std::string &name, const std::string &pass, Client *creator)
-: _name(name), _passKey(pass), _topicRestrict(false)
+: _name(name), _passKey(pass), _inviteOnly(false), _topicRestrict(false) , _clientsLimit(-1)
 {
 	if (creator)
 		_clientsOp[creator->getNickname()] = creator;
@@ -29,13 +29,57 @@ const std::string &Channel::getTopic() const { return _topic; }
 
 const std::string &Channel::getPasskey() const { return _passKey; }
 
+bool Channel::getInviteOnly() const {return _inviteOnly;}
+
 bool Channel::getTopicRestrict() const { return _topicRestrict; }
+
+void Channel::inviteHere(Client *client)
+{
+	if (std::find(_invitedClients.begin(), _invitedClients.end(), client) == _invitedClients.end())
+		_invitedClients.push_back(client);
+}
+
+bool Channel::isInvited(Client *client) const
+{
+	if (std::find(_invitedClients.begin(), _invitedClients.end(), client) == _invitedClients.end())
+		return false;
+	return true;
+}
+
+void Channel::removeFromInvited(Client *client)
+{
+	_invitedClients.erase(std::find(_invitedClients.begin(), _invitedClients.end(), client));
+}
+
+void Channel::setInviteOnly(bool plus, Client &client)
+{
+	_inviteOnly = plus;
+	char sign;
+	if (plus)
+		sign = '+';
+	else
+		sign = '-';
+	std::string MODE_I = ":" + client.getNickname() + "!" + client.getUser() + "@localhost MODE " + _name + " " + sign + "i\r\n";
+	sendToAll(MODE_I);
+}
 
 void Channel::setClients(Client *client)
 {
 	if (!client)
 		return;
 	_clients[client->getNickname()] = client;
+}
+
+void Channel::setTopicRestrict(bool plus, Client &client)
+{
+	_topicRestrict = plus;
+	char sign;
+	if (plus)
+		sign = '+';
+	else
+		sign = '-';
+	std::string MODE_T = ":" + client.getNickname() + "!" + client.getUser() + "@localhost MODE " + _name + " " + sign + "t\r\n";
+	sendToAll(MODE_T);
 }
 
 void Channel::setTopic(const std::string &newTopic){ _topic = newTopic; }
@@ -94,6 +138,8 @@ void	Channel::deleteClientFromChannel(const std::string &nick)
 		_clientsOp.erase(nick);
 	else
 		_clients.erase(nick);
+	if (isInvited(c))
+		removeFromInvited(c);
 }
 
 std::vector<Client*>	Channel::getAllClients() const
