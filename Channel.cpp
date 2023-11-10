@@ -29,7 +29,21 @@ const std::string &Channel::getTopic() const { return _topic; }
 
 const std::string &Channel::getPasskey() const { return _passKey; }
 
+bool Channel::getInviteOnly() const {return _inviteOnly;}
+
 bool Channel::getTopicRestrict() const { return _topicRestrict; }
+
+void Channel::setInviteOnly(bool plus, Client &client)
+{
+	_inviteOnly = plus;
+	char sign;
+	if (plus)
+		sign = '+';
+	else
+		sign = '-';
+	std::string MODE_I = ":" + client.getNickname() + "!" + client.getUser() + "@localhost MODE " + _name + " " + sign + "i\r\n";
+	sendToAll(MODE_I);
+}
 
 void Channel::setClients(Client *client)
 {

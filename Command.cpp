@@ -79,7 +79,6 @@ void	Command::join(Server &server, Client &client, std::vector<std::string> &v)
 	std::istringstream param1(v[0]);
 	if (v.size() == 2)
 	{
-		std::cout << "POOPOO" << std::endl;
 		std::istringstream param2(v[1]);
 		while(std::getline(param1, name, ','))
 		{
@@ -96,7 +95,6 @@ void	Command::join(Server &server, Client &client, std::vector<std::string> &v)
 	{
 		while(std::getline(param1, name, ','))
 		{
-			std::cout << "CIAO" << std::endl;
 			if (name[0] == '#' || name[0] == '&')
 			{
 				pass = "";
@@ -302,7 +300,7 @@ void	Command::mode(Server &server, Client &client, std::vector<std::string> &v)
 			if (c->getInviteOnly() != plus)
 				c->setInviteOnly(plus, client);
 		}
-		else if (modes[i] == 't')
+/* 		else if (modes[i] == 't')
 		{
 			if (c->getTopicRestrict != plus)
 				c->setTopicRestict(plus, client);
@@ -312,6 +310,22 @@ void	Command::mode(Server &server, Client &client, std::vector<std::string> &v)
 				c->setPass(plus, client, v[paramCounter]);
 				paramCounter++;
 		}
+		else if (modes[i] == 'o')
+		{
+			c->setOperator(plus, client, v[paramCounter]);
+			paramCounter++;
+		}
+		else if (modes[i] == 'l')
+		{
+			if (plus)
+			{
+				c->setLimit(plus, client, v[paramCounter]);
+				paramCounter++;
+			}
+			else
+				c->setLimit(plus, client, "");
+			
+		} */
 		//...
 	}
 

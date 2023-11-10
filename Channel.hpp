@@ -31,6 +31,7 @@ public:
 	bool								getInviteOnly() const;
 	bool								getTopicRestrict() const;
 	bool								getIsLimit() const;
+	void								setInviteOnly(bool plus, Client &client);
 	void								setClients(Client *client);
 	void								setTopic(const std::string &newTopic);
 	void								sendToAll(const std::string &msg) const;

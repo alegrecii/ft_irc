@@ -412,7 +412,6 @@ void	Server::setChannels(const std::string &name, const std::string &pass, Clien
 {
 	if (_channels.find(name) == _channels.end())
 	{
-		std::cout << "ENTRO" << std::endl;
 		Channel	*ch = new Channel(name, pass, &client);
 		_channels.insert(std::make_pair(name, ch));
 		client.addChannel(ch);
