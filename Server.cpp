@@ -9,7 +9,7 @@ Server::Server(const std::string &port, const std::string &psw) : _port(portConv
 	_commands["KICK"] = Command::kick;
 	_commands["INVITE"] = Command::invite;
 	_commands["TOPIC"] = Command::topic;
-	// _commands["MODE"] = Command::mode;
+	_commands["MODE"] = Command::mode;
 	_commands["NICK"] = Command::nick;
 	_commands["PASS"] = Command::pass;
 	_commands["USER"] = Command::user;
