@@ -422,7 +422,7 @@ void	Server::setChannels(const std::string &name, const std::string &pass, Clien
 {
 	if (_channels.find(name) == _channels.end())
 	{
-		Channel	*ch = new Channel(name, "", &client);
+		Channel	*ch = new Channel(name, &client);
 		_channels.insert(std::make_pair(name, ch));
 		client.addChannel(ch);
 		sendJoin(name, client);
@@ -431,18 +431,26 @@ void	Server::setChannels(const std::string &name, const std::string &pass, Clien
 	{
 		if ( !_channels[name]->getPasskey().compare("") || !_channels[name]->getPasskey().compare(pass))
 		{
-			if ((_channels[name]->getInviteOnly() && _channels[name]->isInvited(&client)) || !_channels[name]->getInviteOnly())
+			if (_channels[name]->getLimit() <= 0 || _channels[name]->getLimit() > static_cast<int>(_channels[name]->getSize()))
 			{
-				_channels[name]->setClients(&client);
-				client.addChannel(_channels[name]);
-				sendJoin(name, client);
-				if (_channels[name]->getInviteOnly())
-					_channels[name]->removeFromInvited(&client);
+				if ((_channels[name]->getInviteOnly() && _channels[name]->isInvited(&client)) || !_channels[name]->getInviteOnly())
+				{
+					_channels[name]->setClients(&client);
+					client.addChannel(_channels[name]);
+					sendJoin(name, client);
+					if (_channels[name]->getInviteOnly())
+						_channels[name]->removeFromInvited(&client);
+				}
+				else
+				{
+					std::string ERR_INVITEONLYCHAN = "473 " + client.getNickname() + " " + name + " :Cannot join channel, InviteOnly channel!(+i)\r\n";
+					send(client.getFd(), ERR_INVITEONLYCHAN.c_str(), ERR_INVITEONLYCHAN.size(), 0);
+				}
 			}
 			else
 			{
-				std::string ERR_INVITEONLYCHAN = "473 " + client.getNickname() + " " + name + " :Cannot join channel (+i)\r\n";
-				send(client.getFd(), ERR_INVITEONLYCHAN.c_str(), ERR_INVITEONLYCHAN.size(), 0);
+				std::string ERR_CHANNELISFULL = "471 " + client.getNickname() + " " + name + " :Cannot join channel, channel is full!(+l)\r\n";
+				send(client.getFd(), ERR_CHANNELISFULL.c_str(), ERR_CHANNELISFULL.size(), 0);
 			}
 		}
 		else
@@ -450,7 +458,7 @@ void	Server::setChannels(const std::string &name, const std::string &pass, Clien
 			std::string	ERR_BADCHANNELKEY = "475 " + client.getNickname() + " " + name + " :Cannot join channel (+k)!\r\n";
 			send(client.getFd(), ERR_BADCHANNELKEY.c_str(), ERR_BADCHANNELKEY.size(), 0);
 		}
-		
+
 	}
 }
 

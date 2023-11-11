@@ -4,11 +4,15 @@ Channel::Channel()
 {
 }
 
-Channel::Channel(const std::string &name, const std::string &pass, Client *creator)
-: _name(name), _passKey(pass), _inviteOnly(false), _topicRestrict(false) , _clientsLimit(-1)
+Channel::Channel(const std::string &name, Client *creator)
+: _name(name), _passKey(""), _inviteOnly(false), _topicRestrict(false) , _clientsLimit(0)
 {
 	if (creator)
 		_clientsOp[creator->getNickname()] = creator;
+	time_t c = time(NULL);
+	std::stringstream ss;
+	ss << c;
+	_creationTime = ss.str();
 }
 
 Channel::~Channel()
@@ -32,6 +36,8 @@ const std::string &Channel::getPasskey() const { return _passKey; }
 bool Channel::getInviteOnly() const {return _inviteOnly;}
 
 bool Channel::getTopicRestrict() const { return _topicRestrict; }
+
+int Channel::getLimit() const { return _clientsLimit; }
 
 void Channel::inviteHere(Client *client)
 {
@@ -83,6 +89,114 @@ void Channel::setTopicRestrict(bool plus, Client &client)
 }
 
 void Channel::setTopic(const std::string &newTopic){ _topic = newTopic; }
+
+void Channel::setPass(bool plus, Client &client, std::string pass)
+{
+	if (!plus && !_passKey.compare(""))
+		return ;
+
+	std::string RPL_PASS;
+	if (!plus)
+	{
+		_passKey = "";
+		RPL_PASS = ":" + client.getNickname() + "!" + client.getUser() + "@localhost MODE " + _name + " " + "-k\r\n";
+	}
+	else if (pass.find('.') == std::string::npos && pass.find(',') == std::string::npos)
+	{
+		_passKey = pass;
+		RPL_PASS = ":" + client.getNickname() + "!" + client.getUser() + "@localhost MODE " + _name + " +k " + pass + "\r\n";
+	}
+	else
+	{
+		std::string ERR_PASS = "525 " + client.getNickname() + " " + _name + " :password not accepted (do not use '.' and ',')\r\n";
+		send (client.getFd(), ERR_PASS.c_str(), ERR_PASS.size(), 0);
+	}
+	sendToAll(RPL_PASS);
+}
+
+void Channel::setOperator(bool plus, Client &client, std::string nick)
+{
+	if (!client.getNickname().compare(nick) && plus)
+		return ;
+	Client *target = findClient(nick);
+	std::string RPL_OP;
+	if (!target)
+	{
+		std::string	ERR_NOTONCHANNEL = "441 " + client.getNickname() + " " + nick + " " + _name + " :user is not in this channel\r\n";
+		send(client.getFd(), ERR_NOTONCHANNEL.c_str(), ERR_NOTONCHANNEL.size(), 0);
+		return;
+	}
+	if (plus)
+	{
+		if (!isOperator(nick))
+		{
+			_clients.erase(nick);
+			_clientsOp[nick] = target;
+		}
+		RPL_OP = ":" + client.getNickname() + "!" + client.getUser() + "@localhost MODE " + _name + " +o " + nick + "\r\n";
+	}
+	else
+	{
+		if (isOperator(nick))
+		{
+			_clientsOp.erase(nick);
+			_clients[nick] = target;
+		}
+		RPL_OP = ":" + client.getNickname() + "!" + client.getUser() + "@localhost MODE " + _name + " -o " + nick + "\r\n";
+	}
+	sendToAll(RPL_OP);
+}
+
+void Channel::setLimit(Client &client, std::string n)
+{
+	if (n.empty() && _clientsLimit <= 0)
+		return ;
+	std::string RPL_LIMIT;
+	if (n.empty())
+	{
+		_clientsLimit = 0;
+		RPL_LIMIT = ":" + client.getNickname() + "!" + client.getUser() + "@localhost MODE " + _name + " -l\r\n";
+	}
+	else
+	{
+		int x = std::atoi(n.c_str());
+		if (x <= 0)
+			return ;
+		_clientsLimit = x;
+		std::stringstream ss;
+		ss << x;
+		RPL_LIMIT = ":" + client.getNickname() + "!" + client.getUser() + "@localhost MODE " + _name + " +l " + ss.str() + "\r\n";
+	}
+	sendToAll(RPL_LIMIT);
+}
+
+void Channel::printModes(Client &client) const
+{
+	std::string modes = " +";
+	std::string param;
+
+	if (_inviteOnly)
+		modes += "i";
+	if (_topicRestrict)
+		modes += "t";
+	if (_clientsLimit > 0)
+	{
+		modes += "l";
+		std::stringstream ss;
+		ss << _clientsLimit;
+		param += ss.str() + " ";
+	}
+	if (_passKey.compare(""))
+	{
+		modes += "k";
+		if (findClient(client.getNickname()))
+			param += _passKey;
+	}
+	std::string RPL_MODES = "324 " + client.getNickname() + " " + _name + modes + " " + param + "\r\n" ;
+	std::string RPL_TIME = "329 " + client.getNickname() + " " + _name + " " + _creationTime + "\r\n" ;
+	send(client.getFd(), RPL_MODES.c_str(), RPL_MODES.size(), 0);
+	send(client.getFd(), RPL_TIME.c_str(), RPL_TIME.size(), 0);
+}
 
 unsigned int	Channel::getSize() const
 {
@@ -165,7 +279,7 @@ std::vector<Client*>	Channel::getAllClients() const
 
 std::map<std::string, Client *> Channel::getClientsOp() const { return _clientsOp;}
 
-Client *Channel::findClient(const std::string &cl)
+Client *Channel::findClient(const std::string &cl) const
 {
 	if (_clientsOp.find(cl) != _clientsOp.end())
 		return _clientsOp.find(cl)->second;

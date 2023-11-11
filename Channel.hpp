@@ -10,6 +10,7 @@ private:
 	std::string						_name;
 	std::string						_passKey;
 	std::string						_topic;
+	std::string						_creationTime;
 
 	bool							_inviteOnly;
 	bool							_topicRestrict;
@@ -21,7 +22,7 @@ private:
 
 public:
 	Channel();
-	Channel(const std::string &name, const std::string &pass, Client *creator);
+	Channel(const std::string &name, Client *creator);
 	~Channel();
 	Channel&	operator=(const Channel &obj);
 
@@ -31,7 +32,7 @@ public:
 	unsigned int						getMaxUsers() const;
 	bool								getInviteOnly() const;
 	bool								getTopicRestrict() const;
-	bool								getIsLimit() const;
+	int									getLimit() const;
 	void								inviteHere(Client *client);
 	bool								isInvited(Client *client) const;
 	void								removeFromInvited(Client *client);
@@ -39,11 +40,15 @@ public:
 	void								setClients(Client *client);
 	void								setTopicRestrict(bool plus, Client &client);
 	void								setTopic(const std::string &newTopic);
+	void								setPass(bool plus, Client &client, std::string pass);
+	void								setOperator(bool plus, Client &client, std::string nick);
+	void								setLimit(Client &client, std::string n);
+	void								printModes(Client &client) const;
 	void								sendToAll(const std::string &msg) const;
 	unsigned int						getSize() const;
 	std::vector<Client *>				getAllClients() const;
 	std::map<std::string, Client *>		getClientsOp() const;
-	Client*								findClient(const std::string &cl);
+	Client*								findClient(const std::string &cl) const;
 	bool								isOperator(const std::string &cl);
 	void								deleteClientFromChannel(const std::string &cl);
 	void								updateNickInChannel(const std::string &oldName, const std::string &newName);

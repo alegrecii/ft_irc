@@ -77,7 +77,7 @@ void	Command::join(Server &server, Client &client, std::vector<std::string> &v)
 	}
 	std::string	name, pass;
 	std::istringstream param1(v[0]);
-	
+
 	if (v.size() == 2)
 	{
 		std::istringstream param2(v[1]);
@@ -336,8 +336,11 @@ void	Command::mode(Server &server, Client &client, std::vector<std::string> &v)
 	//TODO:check mode con solo canale (v.size < 2)
 	if (v.size() < 2)
 	{
+		c->printModes(client);
 		return;
 	}
+	if (!v[1].compare("+b"))
+		return;
 	if (!c->findClient(client.getNickname()))
 	{
 		std::string	ERR_NOTONCHANNEL = "442 " + client.getNickname() + " " + v[0] + " :You're not on that channel \r\n";
@@ -369,7 +372,7 @@ void	Command::mode(Server &server, Client &client, std::vector<std::string> &v)
 			plus = true;
 		else if (modes[i] == 'o' || modes[i] == 'k' || (modes[i] == 'l' && plus))
 			paramCounter++;
-		else if (modes[i] != 'i' && modes[i] != 't' && modes[i] != 'l' && modes[i] != 'b')
+		else if (modes[i] != 'i' && modes[i] != 't' && modes[i] != 'l')
 			{
 				std::string	ERR_UNKNOWNMODE = "472 " + client.getNickname() + " " + modes[i] + " :is unknown mode char to me \r\n";
 				send(client.getFd(), ERR_UNKNOWNMODE.c_str(), ERR_UNKNOWNMODE.size(), 0);
@@ -399,27 +402,27 @@ void	Command::mode(Server &server, Client &client, std::vector<std::string> &v)
 			if (c->getTopicRestrict() != plus)
 				c->setTopicRestrict(plus, client);
 		}
-		// else if (modes[i] == 'k')
-		// {
-		// 		c->setPass(plus, client, v[paramCounter]);
-		// 		paramCounter++;
-		// }
-		// else if (modes[i] == 'o')
-		// {
-		// 	c->setOperator(plus, client, v[paramCounter]);
-		// 	paramCounter++;
-		// }
-		// else if (modes[i] == 'l')
-		// {
-		// 	if (plus)
-		// 	{
-		// 		c->setLimit(plus, client, v[paramCounter]);
-		// 		paramCounter++;
-		// 	}
-		// 	else
-		// 		c->setLimit(plus, client, "");
-			
-		// }
+		else if (modes[i] == 'k')
+		{
+				c->setPass(plus, client, v[paramCounter]);
+				paramCounter++;
+		}
+		else if (modes[i] == 'o')
+		{
+			c->setOperator(plus, client, v[paramCounter]);
+			paramCounter++;
+		}
+		else if (modes[i] == 'l')
+		{
+			if (plus)
+			{
+				c->setLimit(client, v[paramCounter]);
+				paramCounter++;
+			}
+			else
+				c->setLimit(client, "");
+
+		}
 		//...
 	}
 
@@ -518,7 +521,7 @@ void	Command::userhost(Server &server, Client &client, std::vector<std::string> 
 		Client	*c = server.getClient(v[i]);
 		if (c)
 		{
-			users += c->getNickname() + " ";	
+			users += c->getNickname() + " ";
 		}
 	}
 
