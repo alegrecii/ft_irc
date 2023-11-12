@@ -66,40 +66,132 @@ void	Command::nick(Server &server, Client &client, std::vector<std::string> &v)
 	server.updateNick(client, v[0]);
 }
 
+std::string	Command::findUsers(Channel &channel)
+{
+	std::string						users;
+	std::vector<Client *>			Clients = channel.getAllClients();
+	std::map<std::string, Client *> Ops = channel.getClientsOp();
+
+	for (std::vector<Client *>::iterator it = Clients.begin(); it != Clients.end(); ++it)
+	{
+		if (Ops.find((*it)->getNickname()) != Ops.end())
+			users += "@" + (*it)->getNickname() + " ";
+		else
+			users += (*it)->getNickname() + " ";
+	}
+	return users;
+}
+
+void	Command::sendJoin(Channel &channel, Client &client)
+{
+	std::vector<Client *>	allClient = channel.getAllClients();
+	std::string	users = findUsers(channel);
+	std::string chName = channel.getName();
+	//JOIN_RPL
+
+	std::string RPL_JOIN = ":" + client.getNickname() + "!" + client.getUser() + "@localhost JOIN :" + chName + "\r\n";
+	std::string RPL_NAMREPLY = ":ircserv 353 " + client.getNickname() + " = " + chName + " :" + users + "\r\n";
+	std::string RPL_ENDOFNAMES = ":ircserv 366 " + client.getNickname() + " " + chName + " :End of NAMES list\r\n";
+
+	for (std::vector<Client *>::iterator it = allClient.begin(); it != allClient.end(); ++it)
+		send((*it)->getFd(), RPL_JOIN.c_str(), RPL_JOIN.size(), 0);
+
+	//TOPIC_RPL
+
+	std::string topic = channel.getTopic();
+	if (!topic.empty())
+	{
+		std::string RPL_TOPIC = ":ircserv 332 " + client.getNickname() + " " + chName + " :" + topic + "\r\n";
+		send(client.getFd(), RPL_TOPIC.c_str(), RPL_TOPIC.size(), 0);
+	}
+	//LIST_RPL
+	send(client.getFd(), RPL_NAMREPLY.c_str(), RPL_NAMREPLY.size(), 0);
+	send(client.getFd(), RPL_ENDOFNAMES.c_str(), RPL_ENDOFNAMES.size(), 0);
+}
+
+void	Command::setChannels(Server &server, const std::string &chName, const std::string &pass, Client &client)
+{
+	std::string toLowerName = toLowerString(chName);
+	Channel 	*ch = server.getChannel(toLowerName);
+
+	if (!ch)
+	{
+		ch = new Channel(toLowerName, &client);
+		if (!ch)
+			return;
+		server.addChannel(ch);
+		client.addChannel(ch);
+		sendJoin(*ch, client);
+	}
+	else
+	{
+		if ( ch->getPasskey().compare("") || !ch->getPasskey().compare(pass))
+		{
+			if (ch->getLimit() <= 0 || ch->getLimit() > static_cast<int>(ch->getSize()))
+			{
+				if ((ch->getInviteOnly() && ch->isInvited(&client)) || !ch->getInviteOnly())
+				{
+					ch->setClients(&client);
+					client.addChannel(ch);
+					sendJoin(*ch, client);
+					if (ch->getInviteOnly())
+						ch->removeFromInvited(&client);
+				}
+				else
+				{
+					std::string ERR_INVITEONLYCHAN = "473 " + client.getNickname() + " " + chName + " :Cannot join channel, InviteOnly channel!(+i)\r\n";
+					send(client.getFd(), ERR_INVITEONLYCHAN.c_str(), ERR_INVITEONLYCHAN.size(), 0);
+				}
+			}
+			else
+			{
+				std::string ERR_CHANNELISFULL = "471 " + client.getNickname() + " " + chName + " :Cannot join channel, channel is full!(+l)\r\n";
+				send(client.getFd(), ERR_CHANNELISFULL.c_str(), ERR_CHANNELISFULL.size(), 0);
+			}
+		}
+		else
+		{
+			std::string	ERR_BADCHANNELKEY = "475 " + client.getNickname() + " " + chName + " :Cannot join channel (+k)!\r\n";
+			send(client.getFd(), ERR_BADCHANNELKEY.c_str(), ERR_BADCHANNELKEY.size(), 0);
+		}
+
+	}
+}
+
 void	Command::join(Server &server, Client &client, std::vector<std::string> &v)
 {
 	std::cout << "Command detected: JOIN con " << v.size() << " parameters" << std::endl;
-	if (v.size() < 1)
+	if (!v.size())
 	{
-		std::string error = ":" + client.getNickname() + " 461 :Not enough parameters\r\n";
+		std::string error = "461 " + client.getNickname() + " JOIN :Not enough parameters\r\n";
 		send(client.getFd(), error.c_str(), error.size(), 0);
 		return;
 	}
-	std::string	name, pass;
-	std::istringstream param1(v[0]);
+	std::string	chName, pass;
+	std::istringstream channels(v[0]);
 
 	if (v.size() == 2)
 	{
-		std::istringstream param2(v[1]);
-		while(std::getline(param1, name, ','))
+		std::istringstream passwords(v[1]);
+		while(std::getline(channels, chName, ','))
 		{
-			if (name[0] == '#' || name[0] == '&')
+			if (chName[0] == '#' || chName[0] == '&')
 			{
-				if(!std::getline(param2, pass, ','))
+				if(!std::getline(passwords, pass, ','))
 					pass = "";
-				server.setChannels(name, pass, client);
+				setChannels(server, chName, pass, client);
 				//RPL_JOIN , RPL_TOPIC, RPL_NAMREPLY, RPL_ENDOFNAMES
 			}
 		}
 	}
 	else if (v.size() == 1)
 	{
-		while(std::getline(param1, name, ','))
+		while(std::getline(channels, chName, ','))
 		{
-			if (name[0] == '#' || name[0] == '&')
+			if (chName[0] == '#' || chName[0] == '&')
 			{
 				pass = "";
-				server.setChannels(name, pass, client);
+				setChannels(server, chName, pass, client);
 				//RPL_JOIN , RPL_TOPIC, RPL_NAMREPLY, RPL_ENDOFNAMES
 			}
 		}
@@ -421,7 +513,6 @@ void	Command::mode(Server &server, Client &client, std::vector<std::string> &v)
 			}
 			else
 				c->setLimit(client, "");
-
 		}
 		//...
 	}

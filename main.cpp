@@ -8,6 +8,7 @@ int	main(int ac, char **av)
 	if (ac != 3)
 	{
 		std::cerr << "Insert correct arguments!" << std::endl;
+		std::cerr << "Usage: ./ircserv <port> <passsword>" << std::endl;
 		return 1;
 	}
 	else

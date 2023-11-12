@@ -31,5 +31,7 @@ extern bool	running;
 
 std::vector<std::string>	ft_split(const std::string &msg, const char delimiter);
 
-uint16_t	portConverter(const std::string &port);
-void		sigHandler(int);
+uint16_t					portConverter(const std::string &port);
+void						sigHandler(int);
+std::string					toLowerString(std::string string);
+bool						compareInsensitive(const std::string &a, const std::string &b);

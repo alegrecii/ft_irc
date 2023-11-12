@@ -5,7 +5,7 @@ Channel::Channel()
 }
 
 Channel::Channel(const std::string &name, Client *creator)
-: _name(name), _passKey(""), _inviteOnly(false), _topicRestrict(false) , _clientsLimit(0)
+: _name(toLowerString(name)), _passKey(""), _inviteOnly(false), _topicRestrict(false) , _clientsLimit(0)
 {
 	if (creator)
 		_clientsOp[creator->getNickname()] = creator;

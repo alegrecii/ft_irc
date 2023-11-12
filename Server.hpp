@@ -27,25 +27,24 @@ public:
 
 	const std::string	&getPassword() const;
 
-	void	updateNick(Client &client, const std::string &newName);
-	Client	*getClient(const std::string &name);
-	Channel	*getChannel(const std::string &chName);
-	Client	*getClientByFd(int fd) const;
-	void	deleteClient(Client *client);
-	void	deleteClient(const std::string &clName);
-	void	deleteChannel(Channel *channel);
-	void	deleteChannel(const std::string &chName);
+	void				updateNick(Client &client, const std::string &newName);
+	Client				*getClient(const std::string &name);
+	Channel				*getChannel(const std::string &chName);
+	Client				*getClientByFd(int fd) const;
+	void				addChannel(Channel *ch);
+	void				deleteClient(Client *client);
+	void				deleteClient(const std::string &clName);
+	void				deleteChannel(Channel *channel);
+	void				deleteChannel(const std::string &chName);
 
-	void	run();
-	void	msgAnalyzer(Client &client, const char *msg);
-	void	registration(Client &client, const std::string &msg);
-	void	cmdAnalyzer(Client &client, const std::string &msg);
-	void	welcomeMessage(Client &client);
-	void	setChannels(const std::string &name, const std::string &pass, Client &client);
-	void	sendJoin(const std::string &name, Client &client);
-	void	sendToAllClients(const std::string &msg);
-	std::string	findUsers(const std::string &name);
+	void				run();
+	void				status();
 
-	void	status();
+	void				welcomeMessage(Client &client);
+	void				msgAnalyzer(Client &client, const char *msg);
+	void				cmdAnalyzer(Client &client, const std::string &msg);
+	void				registration(Client &client, const std::string &msg);
+	void				sendToAllClients(const std::string &msg);
+	std::string			findUsers(const std::string &name);
 };
 

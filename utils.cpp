@@ -2,7 +2,7 @@
 
 extern bool running;
 
-void	sigHandler(int sig)
+void		sigHandler(int sig)
 {
 	if (sig == SIGINT)
 	{
@@ -11,7 +11,7 @@ void	sigHandler(int sig)
 	}
 }
 
-bool	isNumber(const std::string &str)
+bool		isNumber(const std::string &str)
 {
 	for(size_t i = 0; i < str.size(); i++)
 	{
@@ -47,4 +47,23 @@ std::vector<std::string>	ft_split(const std::string &str, const char delimiter)
 		if (!param.empty())
 			vParam.push_back(param);
 	return(vParam);
+}
+
+std::string	toLowerString(std::string string)
+{
+	for(size_t i = 0; i < string.size(); ++i)
+		string[i] = std::tolower(string[i]);
+	return (string);
+}
+
+bool 	ichar_equals(char a, char b)
+{
+    return (std::tolower(static_cast<unsigned char>(a)) == 
+		std::tolower(static_cast<unsigned char>(b)));
+}
+
+bool 	compareInsensitive(const std::string& a, const std::string& b)
+{
+    return ((a.size() == b.size()) && 
+		std::equal(a.begin(), a.end(), b.begin(), ichar_equals));
 }
