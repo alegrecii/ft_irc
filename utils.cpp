@@ -51,9 +51,11 @@ std::vector<std::string>	ft_split(const std::string &str, const char delimiter)
 
 std::string	toLowerString(std::string string)
 {
-	for(size_t i = 0; i < string.size(); ++i)
-		string[i] = std::tolower(string[i]);
-	return (string);
+	std::string cpy(string);
+
+	for(size_t i = 0; i < cpy.size(); ++i)
+		cpy[i] = std::tolower(cpy[i]);
+	return (cpy);
 }
 
 bool 	ichar_equals(char a, char b)

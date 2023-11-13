@@ -22,7 +22,6 @@ void Command::user(Server &server, Client &client, std::vector<std::string> &v)
 		send(client.getFd(), error.c_str(), error.size(), 0);
 		return;
 	}
-
 	client.setUser(v[0]);
 }
 
@@ -208,7 +207,7 @@ void	Command::msgToClient(Server &s, Client &c, const std::string &targetClient,
 		send(c.getFd(), ERR_NOSUCHNICK.c_str(), ERR_NOSUCHNICK.size(), 0);
 		return ;
 	}
-	std::string	MSG = ":" + c.getNickname() + " PRIVMSG " + targetClient + " :" + msg + "\r\n";
+	std::string	MSG = ":" + c.getNickname() + "! PRIVMSG " + targetClient + " :" + msg + "\r\n";
 	send(cl->getFd(), MSG.c_str(), MSG.size(), 0);
 }
 
@@ -235,7 +234,7 @@ void	Command::msgToChannel(Server &s, Client &c, const std::string &chName, cons
 	{
 		if (allClients[i]->getNickname() != c.getNickname())
 		{
-			std::string	MSG_CHANNEL = ":" + c.getNickname() + " PRIVMSG " + chName + " :" + msg + "\r\n";
+			std::string	MSG_CHANNEL = ":" + c.getNickname() + "! PRIVMSG " + chName + " :" + msg + "\r\n";
 			send(allClients[i]->getFd(), MSG_CHANNEL.c_str(), MSG_CHANNEL.size(), 0);
 		}
 	}
@@ -244,7 +243,6 @@ void	Command::msgToChannel(Server &s, Client &c, const std::string &chName, cons
 void	Command::privmsg(Server &server, Client &client, std::vector<std::string> &v)
 {
 	std::cout << "Command detected: PRIVMSG" << std::endl;
-	(void) server;
 	if (v.size() < 2)
 	{
 		std::string error = "461 " + client.getNickname() + " PRIVMSG :Not enough parameters\r\n";
@@ -516,14 +514,6 @@ void	Command::mode(Server &server, Client &client, std::vector<std::string> &v)
 		}
 		//...
 	}
-
-	// salvare parametro 1 in una stringa
-	// variabile bool sul segno, parte da +
-	// variabile int che scorre i parametri del vettore
-	// check sulla stringa su quanti parametri ha bisogno e sui char, se mon sono quelli implementati da noi lanciare RPL 472 e uscire
-	//se i parametri sono < di quel mumero uscire subito e dare "[19:42] [Error] MODE: This command requires more parameters" e uscire.
-	//scorrere la stringa : se si trova un segno cambiare la variabile bool, se si trova una delle lettere che noi vogliamo far partire il mode(se questo ha bisogno di un argomento fare ++ sulla variabile counter)
-	/*by AleGreci*/
 }
 
 void Command::part(Server &server, Client &client, std::vector<std::string> &v)
@@ -619,9 +609,3 @@ void	Command::userhost(Server &server, Client &client, std::vector<std::string> 
 	std::string	RPL_USERHOST = ":ircserv 302 " + users + "\r\n";
 	send(client.getFd(), RPL_USERHOST.c_str(), RPL_USERHOST.size(), 0);
 }
-	// 	std::string	ERR_CHANOPRIVSNEEDED = "482 " + client.getNickname() + " " + v[0] + ":You're not channel operator \r\n";
-	// 	send(client.getFd(), ERR_CHANOPRIVSNEEDED.c_str(), ERR_CHANOPRIVSNEEDED.size(), 0);
-	// 	return;
-	// }
-
-
