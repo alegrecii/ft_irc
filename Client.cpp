@@ -1,12 +1,11 @@
 #include "Client.hpp"
 
-Client::Client() : _fd(-1), _isRegister(false), _passTaken(false), _nickname(""), _user(""), _startReg(time(0))
+Client::Client() : _fd(-1), _isRegister(true), _passTaken(true), _nickname("PALLE"), _user("Palle"), _startReg(time(0))
 {
 }
 
 Client::Client(int fd) : _fd(fd), _isRegister(false), _passTaken(false), _nickname(""), _user(""), _startReg(time(0))
 {
-	std::cout << "New user" << std::endl;
 }
 
 Client &Client::operator=(const Client &obj)

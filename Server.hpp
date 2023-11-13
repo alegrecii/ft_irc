@@ -2,6 +2,8 @@
 
 #include "utils.hpp"
 
+#define SUPERCHANNEL "#welcome"
+
 class Server;
 class Client;
 class Command;

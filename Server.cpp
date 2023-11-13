@@ -17,6 +17,13 @@ Server::Server(const std::string &port, const std::string &psw) : _port(portConv
 	_commands["PART"] = Command::part;
 	// _commands["WHO"] = Command::who;
 	// _commands["USERHOST"] = Command::userhost;
+	Client	*bot = new Client();
+	Channel *ch = new Channel(SUPERCHANNEL, bot);
+
+	_clients[bot->getNickname()] = bot;
+	addChannel(ch);
+	bot->addChannel(ch);
+	
 }
 
 Server::~Server()
@@ -47,9 +54,6 @@ void Server::updateNick(Client &client, const std::string &newName)
 		_clients.erase(oldName);
 		_clients[newName] = &client;
 		//Update all channels
-
-
-
 
 		//Update nick in all channels
 		std::vector<Channel *> joinedChannels = client.getJoinedChannels();
@@ -233,10 +237,10 @@ void	Server::run()
 	}
 	for(std::map<std::string, Client *>::iterator it = _clients.begin(); it != _clients.end(); it++)
 	{
-		std::cout << "Closing fd " << it->second->getFd() << std::endl;
 		send(it->second->getFd(), "QUIT :Server disconnected!\r\n", 29, 0);
 		epoll_ctl(epoll_fd, EPOLL_CTL_DEL, it->second->getFd(), NULL);
-		close(it->second->getFd());
+		if (it->second->getFd() >= 0)
+			close(it->second->getFd());
 		delete it->second;
 	}
 	for(std::map<std::string, Channel *>::iterator it = _channels.begin(); it != _channels.end(); it++)
@@ -325,10 +329,13 @@ void	Server::registration(Client &client, const std::string &msg)
 			return;
 		}
 		std::cout << client.getNickname() << " registered!" << std::endl;
-		client.setIsRegistered(true);
+
 		welcomeMessage(client);
+		client.setIsRegistered(true);
 		_clientsNotRegistered.remove(&client);
 		_clients[client.getNickname()] = &client;
+		std::string superchannel = SUPERCHANNEL;
+		cmdAnalyzer(client, "JOIN " + superchannel);
 	}
 }
 
