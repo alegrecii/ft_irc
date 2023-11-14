@@ -30,7 +30,7 @@
 extern bool	running;
 
 std::vector<std::string>	ft_split(const std::string &msg, const char delimiter);
-
+bool						inSet(const std::string &nick, const std::string &set);
 uint16_t					portConverter(const std::string &port);
 void						sigHandler(int);
 std::string					toLowerString(std::string string);

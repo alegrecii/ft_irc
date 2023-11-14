@@ -39,7 +39,7 @@ void Command::pass(Server &server, Client &client, std::vector<std::string> &v)
 		send(client.getFd(), error.c_str(), error.size(), 0);
 		return;
 	}
-	if (v[0].compare(":" + server.getPassword()))
+	if (v[0].compare(server.getPassword()))
 	{
 		std::string error = "464 " + client.getNickname() + " :Password incorrect\r\n";
 		send(client.getFd(), error.c_str(), error.size(), 0);
@@ -53,6 +53,12 @@ void	Command::nick(Server &server, Client &client, std::vector<std::string> &v)
 	if (v.size() < 1)
 	{
 		std::string error = "461 " + client.getNickname() + " NICK :Not enough parameters\r\n";
+		send(client.getFd(), error.c_str(), error.size(), 0);
+		return;
+	}
+	if (inSet(v[0], "./;: !@#&?"))
+	{
+		std::string error = "432 " + client.getNickname() + " " + v[0] + " :Erroneus nickname\r\n";
 		send(client.getFd(), error.c_str(), error.size(), 0);
 		return;
 	}
@@ -124,7 +130,7 @@ void	Command::setChannels(Server &server, const std::string &chName, const std::
 	}
 	else
 	{
-		if ( ch->getPasskey().compare("") || !ch->getPasskey().compare(pass))
+		if (!ch->getPasskey().compare("") || !ch->getPasskey().compare(pass))
 		{
 			if (ch->getLimit() <= 0 || ch->getLimit() > static_cast<int>(ch->getSize()))
 			{

@@ -23,7 +23,7 @@ Server::Server(const std::string &port, const std::string &psw) : _port(portConv
 	_clients[bot->getNickname()] = bot;
 	addChannel(ch);
 	bot->addChannel(ch);
-	
+
 }
 
 Server::~Server()
@@ -146,31 +146,34 @@ void	Server::run()
 	memset(&addrSize, 0, sizeof(socklen_t));
 	serverSocket = socket(AF_INET, SOCK_STREAM, 0);
 	if (serverSocket == -1)
-		perror("socket");
+		throw (std::runtime_error("server socket"));
 	int opt = 1;
 	if (setsockopt(serverSocket, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) == -1)
-		perror("setsockopt");
+		throw (std::runtime_error("setsockopt"));
 	if (fcntl(serverSocket, F_SETFL, O_NONBLOCK) == -1)
 		throw (std::runtime_error("fcntl-server"));
 	serverAddr.sin_family = AF_INET;
 	serverAddr.sin_port = htons(this->_port);
 	serverAddr.sin_addr.s_addr = htonl(INADDR_ANY);
 
-	if (bind(serverSocket, (struct sockaddr*)&serverAddr, sizeof(serverAddr)))
-		perror("bind");
+	if (bind(serverSocket, (struct sockaddr*)&serverAddr, sizeof(serverAddr)) == -1)
+		throw (std::runtime_error("bind"));
 	if (listen(serverSocket, MAX_QUEUE_CONN) == -1)
-		perror("listen");
+		throw (std::runtime_error("listen"));
 
 	std::cout << "Server is listening on port " << this->_port << "..." << std::endl;
 
 	int epoll_fd = epoll_create1(0);
+	if (epoll_fd == -1)
+		throw (std::runtime_error("epoll_create"));
 
 	struct epoll_event event;
 	memset(&event, 0, sizeof(epoll_event));
 	event.events = EPOLLIN; // Monitor read events
 	event.data.fd = serverSocket;
 
-	epoll_ctl(epoll_fd, EPOLL_CTL_ADD, serverSocket, &event); // Add the server socket to the epoll
+	if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, serverSocket, &event) == -1) // Add the server socket to the epoll
+		throw (std::runtime_error("epoll_ctl"));
 
 	struct epoll_event arrEvent[MAX_CLIENT]; // Create an event array to store events
 
@@ -245,7 +248,7 @@ void	Server::run()
 	}
 	for(std::map<std::string, Channel *>::iterator it = _channels.begin(); it != _channels.end(); it++)
 		delete it->second;
-	
+
 	close(epoll_fd);
 	close(serverSocket);
 }
@@ -286,27 +289,45 @@ void	Server::welcomeMessage(Client &client)
 	send(client.getFd(), RPL_CREATED.c_str(), RPL_CREATED.length(), flags);
 }
 
+static void	fillParam(std::vector<std::string> &vParam, std::istringstream &iss)
+{
+	std::string	param, last;
+
+
+	while (std::getline(iss, param, ' '))
+	{
+		if (param.empty())
+			continue;
+		else if (param[0] == ':')
+		{
+			std::getline(iss, last, (char)EOF);
+			param.erase(0, 1);
+			if (last.size() + param.size())
+			{
+				if (!last.empty())
+					vParam.push_back(param + " " + last);
+				else
+					vParam.push_back(param);
+			}
+		}
+		else
+			vParam.push_back(param);
+	}
+}
+
 void	Server::registration(Client &client, const std::string &msg)
 {
-	std::cout << "\033[32m" << msg << "\033[0m" << std::endl;
-	
+	std::cout << "\033[33m" << msg << "\033[0m" << std::endl;
+
 	std::vector<std::string>	params;
 	std::string					cmd;
 
-	params = ft_split(msg, ' ');
-
-	// Controllo empty command
-	if (!params.size())
-		return;
-
-	cmd = params[0];
-	params.erase(params.begin());
+	std::istringstream iss(msg);
+	iss >> cmd;
+	fillParam(params, iss);
 
 	if (!_isPassword)
 		client.setPassTaken(true);
-
-	//Unregognised command?
-
 	if (!client.getPassTaken() && !cmd.compare("PASS"))
 		Command::pass(*this, client, params);
 	else if (!cmd.compare("NICK"))
@@ -339,31 +360,6 @@ void	Server::registration(Client &client, const std::string &msg)
 	}
 }
 
-static void	fillParam(std::vector<std::string> &vParam, std::istringstream &iss)
-{
-	std::string	param, last;
-
-
-	while (std::getline(iss, param, ' '))
-	{
-		if (param.empty())
-			continue;
-		else if (param[0] == ':')
-		{
-			std::getline(iss, last, (char)EOF);
-			param.erase(0, 1);
-			if (last.size() + param.size())
-			{
-				if (!last.empty())
-					vParam.push_back(param + " " + last);
-				else
-					vParam.push_back(param);
-			}
-		}
-		else
-			vParam.push_back(param);
-	}
-}
 
 void	Server::cmdAnalyzer(Client &client, const std::string &msg)
 {

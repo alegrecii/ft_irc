@@ -49,6 +49,16 @@ std::vector<std::string>	ft_split(const std::string &str, const char delimiter)
 	return(vParam);
 }
 
+bool inSet(const std::string &string, const std::string &set)
+{
+	for (size_t i = 0; i < set.size(); ++i)
+	{
+		if (string.find(set[i]) != std::string::npos)
+			return (true);
+	}
+	return (false);
+}
+
 std::string	toLowerString(std::string string)
 {
 	std::string cpy(string);
@@ -60,12 +70,12 @@ std::string	toLowerString(std::string string)
 
 bool 	ichar_equals(char a, char b)
 {
-    return (std::tolower(static_cast<unsigned char>(a)) == 
+    return (std::tolower(static_cast<unsigned char>(a)) ==
 		std::tolower(static_cast<unsigned char>(b)));
 }
 
 bool 	compareInsensitive(const std::string& a, const std::string& b)
 {
-    return ((a.size() == b.size()) && 
+    return ((a.size() == b.size()) &&
 		std::equal(a.begin(), a.end(), b.begin(), ichar_equals));
 }
