@@ -615,3 +615,8 @@ void	Command::userhost(Server &server, Client &client, std::vector<std::string> 
 	std::string	RPL_USERHOST = ":ircserv 302 " + users + "\r\n";
 	send(client.getFd(), RPL_USERHOST.c_str(), RPL_USERHOST.size(), 0);
 }
+
+/* void	Command::bot(Server &server, Client &client, std::vector<std::string> &v)
+{
+
+} */

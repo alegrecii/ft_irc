@@ -140,7 +140,11 @@ void	Server::run()
 	struct sockaddr_in serverAddr, newAddr;
 	socklen_t addrSize;
 	char buffer[512];
+	struct rlimit rlim;
 
+	memset(&rlim, 0, sizeof(rlimit));
+	if (getrlimit(RLIMIT_NOFILE, &rlim) == -1) // max open fd
+		rlim.rlim_cur = 1024;
 	memset(&serverAddr, 0, sizeof(sockaddr_in));
 	memset(&newAddr, 0, sizeof(sockaddr_in));
 	memset(&addrSize, 0, sizeof(socklen_t));
@@ -175,11 +179,11 @@ void	Server::run()
 	if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, serverSocket, &event) == -1) // Add the server socket to the epoll
 		throw (std::runtime_error("epoll_ctl"));
 
-	struct epoll_event arrEvent[MAX_CLIENT]; // Create an event array to store events
+	struct epoll_event arrEvent[rlim.rlim_cur]; // Create an event array to store events
 
 	while (running)
 	{
-		int ready_fds = epoll_wait(epoll_fd, arrEvent, MAX_CLIENT, -1); // Wait for events
+		int ready_fds = epoll_wait(epoll_fd, arrEvent, rlim.rlim_cur, -1); // Wait for events
 
 		if (ready_fds == -1)
 			perror("epoll_wait");
@@ -190,7 +194,10 @@ void	Server::run()
 			{
 				newSocket = accept(serverSocket, (struct sockaddr*)&newAddr, &addrSize);
 				if (newSocket == -1)
-					perror("accept");
+				{
+					std::cerr << "Connection refused: the server is full!" << std::endl;
+					continue;
+				}
 				if (fcntl(newSocket, F_SETFL, O_NONBLOCK) == -1)
 					throw (std::runtime_error("fcntl-client"));
 				event.data.fd = newSocket;
@@ -260,7 +267,7 @@ void	Server::msgAnalyzer(Client &client, const char *message)
 
 	msg = client.getBuffer() + msg;
 	client.setBuffer("");
-
+	std::cout << "msgAnalyzer:"<< message << std::endl;
 	while ((pos = msg.find('\n')) != std::string::npos)
 	{
 		std::string			line;
