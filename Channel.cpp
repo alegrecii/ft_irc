@@ -109,7 +109,7 @@ void Channel::setPass(bool plus, Client &client, std::string pass)
 	else
 	{
 		std::string ERR_PASS = "525 " + client.getNickname() + " " + _name + " :password not accepted (do not use '.' and ',')\r\n";
-		send (client.getFd(), ERR_PASS.c_str(), ERR_PASS.size(), 0);
+		send (client.getFd(), ERR_PASS.c_str(), ERR_PASS.size(), MSG_DONTWAIT | MSG_NOSIGNAL);
 	}
 	sendToAll(RPL_PASS);
 }
@@ -123,7 +123,7 @@ void Channel::setOperator(bool plus, Client &client, std::string nick)
 	if (!target)
 	{
 		std::string	ERR_NOTONCHANNEL = "441 " + client.getNickname() + " " + nick + " " + _name + " :user is not in this channel\r\n";
-		send(client.getFd(), ERR_NOTONCHANNEL.c_str(), ERR_NOTONCHANNEL.size(), 0);
+		send(client.getFd(), ERR_NOTONCHANNEL.c_str(), ERR_NOTONCHANNEL.size(), MSG_DONTWAIT | MSG_NOSIGNAL);
 		return;
 	}
 	if (plus)
@@ -194,8 +194,8 @@ void Channel::printModes(Client &client) const
 	}
 	std::string RPL_MODES = "324 " + client.getNickname() + " " + _name + modes + " " + param + "\r\n" ;
 	std::string RPL_TIME = "329 " + client.getNickname() + " " + _name + " " + _creationTime + "\r\n" ;
-	send(client.getFd(), RPL_MODES.c_str(), RPL_MODES.size(), 0);
-	send(client.getFd(), RPL_TIME.c_str(), RPL_TIME.size(), 0);
+	send(client.getFd(), RPL_MODES.c_str(), RPL_MODES.size(), MSG_DONTWAIT | MSG_NOSIGNAL);
+	send(client.getFd(), RPL_TIME.c_str(), RPL_TIME.size(), MSG_DONTWAIT | MSG_NOSIGNAL);
 }
 
 unsigned int	Channel::getSize() const
@@ -209,7 +209,7 @@ void Channel::sendToAll(const std::string &msg) const
 	size_t					size = all.size();
 
 	for (size_t i = 0; i < size; i++)
-		send(all[i]->getFd(), msg.c_str(), msg.size(), 0);
+		send(all[i]->getFd(), msg.c_str(), msg.size(), MSG_DONTWAIT | MSG_NOSIGNAL);
 }
 
 void	Channel::updateNickInChannel(const std::string &old, const std::string &newName)

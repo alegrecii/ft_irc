@@ -16,6 +16,7 @@ class Server
 private:
 	uint16_t const						_port;
 	std::string const					_psw;
+	unsigned long int					_fdCount;
 	bool const							_isPassword;
 
 	std::list<Client*>					_clientsNotRegistered;
@@ -44,8 +45,8 @@ public:
 
 	void				welcomeMessage(Client &client);
 	void				msgAnalyzer(Client &client, const char *msg);
-	void				cmdAnalyzer(Client &client, const std::string &msg);
-	void				registration(Client &client, const std::string &msg);
+	void				cmdAnalyzer(Client &client, std::vector<std::string> vParam);
+	void				registration(Client &client, std::vector<std::string> vParam);
 	void				sendToAllClients(const std::string &msg);
 	std::string			findUsers(const std::string &name);
 };
