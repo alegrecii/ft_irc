@@ -36,6 +36,7 @@ public:
 	const std::string					&getBuffer() const;
 	void								setBuffer(const std::string &buffer);
 	void								addChannel(Channel *channel);
+	void								removeJoined(Channel *channel);
 	void								deleteFromChannels(Server &server);
 	const std::vector<Channel *>		&getJoinedChannels() const;
 };

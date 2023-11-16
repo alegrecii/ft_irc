@@ -54,11 +54,20 @@ void	Client::addChannel(Channel *channel)
 
 void Client::setBuffer(const std::string &buffer) {_buffer = buffer;}
 
+void Client::removeJoined(Channel *ch)
+{
+	std::vector<Channel *>::iterator it = std::find(_joinedChannels.begin(), _joinedChannels.end(), ch);
+	if (!ch || it == _joinedChannels.end())
+		return;
+	_joinedChannels.erase(it);
+}
+
 void Client::deleteFromChannels(Server &server)
 {
 	Channel *tmpCh = NULL;
-
-	for(std::vector<Channel *>::iterator it = _joinedChannels.begin(); it != _joinedChannels.end(); ++it)
+	std::vector<Channel *>	cpy(_joinedChannels);
+	
+	for(std::vector<Channel *>::iterator it = cpy.begin(); it != cpy.end(); ++it)
 	{
 		if(*it)
 		{
@@ -73,4 +82,5 @@ void Client::deleteFromChannels(Server &server)
 			}
 		}
 	}
+	_joinedChannels.clear();
 }

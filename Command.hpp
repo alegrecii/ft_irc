@@ -34,6 +34,7 @@ public:
 	static void			part(Server &server, Client &client, std::vector<std::string> &v);
 	static void			who(Server &server, Client &client, std::vector<std::string> &v);
 	static void			userhost(Server &server, Client &client, std::vector<std::string> &v);
+	static void			help(Server &server, Client &client, std::vector<std::string> &v);
 	//static void			bot(Server &server, Client &client, std::vector<std::string> &v);
 
 };

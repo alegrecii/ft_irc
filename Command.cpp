@@ -139,8 +139,7 @@ void	Command::setChannels(Server &server, const std::string &chName, const std::
 					ch->setClients(&client);
 					client.addChannel(ch);
 					sendJoin(*ch, client);
-					if (ch->getInviteOnly())
-						ch->removeFromInvited(&client);
+					ch->removeFromInvited(&client);
 				}
 				else
 				{
@@ -165,7 +164,6 @@ void	Command::setChannels(Server &server, const std::string &chName, const std::
 
 void	Command::join(Server &server, Client &client, std::vector<std::string> &v)
 {
-	std::cout << "Command detected: JOIN con " << v.size() << " parameters" << std::endl;
 	if (!v.size())
 	{
 		std::string error = "461 " + client.getNickname() + " JOIN :Not enough parameters\r\n";
@@ -248,7 +246,6 @@ void	Command::msgToChannel(Server &s, Client &c, const std::string &chName, cons
 
 void	Command::privmsg(Server &server, Client &client, std::vector<std::string> &v)
 {
-	std::cout << "Command detected: PRIVMSG" << std::endl;
 	if (v.size() < 2)
 	{
 		std::string error = "461 " + client.getNickname() + " PRIVMSG :Not enough parameters\r\n";
@@ -318,7 +315,8 @@ void	Command::kick(Server &server, Client &client, std::vector<std::string> &v)
 	std::string KICK_MSG = ":" + client.getNickname() + "!" + client.getUser() + "@localhost KICK " + ch->getName() + " " + userToBan + "\r\n";
 	ch->sendToAll(KICK_MSG);
 	ch->deleteClientFromChannel(userToBan);
-	// send(client.getFd(), KICK_MSG.c_str(), KICK_MSG.size(), 0);
+	if (!ch->getSize())
+		server.deleteChannel(ch->getName());
 }
 
 void	Command::invite(Server &server, Client &client, std::vector<std::string> &v)
@@ -374,7 +372,6 @@ void	Command::invite(Server &server, Client &client, std::vector<std::string> &v
 
 void	Command::topic(Server &server, Client &client, std::vector<std::string> &v)
 {
-	std::cout << "Command detected: TOPIC" << std::endl;
 	(void) server;
 	if (v.size() < 1)
 	{
@@ -415,7 +412,6 @@ void	Command::topic(Server &server, Client &client, std::vector<std::string> &v)
 
 void	Command::mode(Server &server, Client &client, std::vector<std::string> &v)
 {
-	std::cout << "Command detected: MODE" << std::endl;
 	if (!v.size())
 	{
 		std::string error = "461 " + client.getNickname() + " MODE :Not enough parameters\r\n";
@@ -524,7 +520,6 @@ void	Command::mode(Server &server, Client &client, std::vector<std::string> &v)
 
 void Command::part(Server &server, Client &client, std::vector<std::string> &v)
 {
-	std::cout << "Command detected: PART" << std::endl;
 	if (v.size() < 1)
 	{
 		std::string error = "461 " + client.getNickname() + " PART :Not enough parameters\r\n";
@@ -538,7 +533,6 @@ void Command::part(Server &server, Client &client, std::vector<std::string> &v)
 		std::string name = *it;
 		if (name[0] == '#' || name[0] == '&')
 		{
-			std::cout << name << std::endl;
 			Channel *c = server.getChannel(name);
 			if (!c)
 			{
@@ -616,7 +610,17 @@ void	Command::userhost(Server &server, Client &client, std::vector<std::string> 
 	send(client.getFd(), RPL_USERHOST.c_str(), RPL_USERHOST.size(), MSG_DONTWAIT | MSG_NOSIGNAL);
 }
 
-/* void	Command::bot(Server &server, Client &client, std::vector<std::string> &v)
+void	Command::help(Server &server, Client &client, std::vector<std::string> &v)
 {
-
-} */
+	(void)server;
+	(void)v;
+	std::string CMDS[12] = {"JOIN", "PART", "PRIVMSG", "PING", "KICK", "INVITE", "TOPIC", "MODE", "NICK", "PASS", "USER", "HELP"};
+	std::string toSend;
+	toSend = ":ircserv 704 > * :**Help System**\r\n";
+	for (int i = 0; i < 12; ++i)
+	{
+		toSend += ":ircserv 705 > * :" + CMDS[i] + "\r\n";
+	}
+	toSend += ":ircserv 706 > * :**End of Help System**\r\n";
+	send(client.getFd(), toSend.c_str(), toSend.size(), MSG_DONTWAIT | MSG_NOSIGNAL);
+}

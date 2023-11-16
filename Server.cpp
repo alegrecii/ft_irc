@@ -16,6 +16,7 @@ Server::Server(const std::string &port, const std::string &psw)
 	_commands["USER"] = Command::user;
 	_commands["STATUS"] = Command::status;
 	_commands["PART"] = Command::part;
+	_commands["HELP"] = Command::help;
 	// _commands["WHO"] = Command::who;
 	// _commands["USERHOST"] = Command::userhost;
 	Client	*bot = new Client();
@@ -24,7 +25,6 @@ Server::Server(const std::string &port, const std::string &psw)
 	_clients[bot->getNickname()] = bot;
 	addChannel(ch);
 	bot->addChannel(ch);
-
 }
 
 Server::~Server()
@@ -226,27 +226,22 @@ void	Server::run()
 				c = getClientByFd(clientSocket);
 				memset(buffer, 0, sizeof(buffer));
 				int bytesReceived = recv(clientSocket, buffer, sizeof(buffer), 0);
-				std::cout << "Client: " << clientSocket << std::endl;
 				if (bytesReceived <= 0)
 				{
 					epoll_ctl(epoll_fd, EPOLL_CTL_DEL, clientSocket, NULL);
 					_fdCount--;
 					close(clientSocket);
+					std::cout << "Client [" << clientSocket << "] : {" <<  c->getNickname() << "} disconnected." << std::endl;
 					deleteClient(c);
-					// Send disconnection to client?
-					std::cout << "Client [" << clientSocket << "] disconnected." << std::endl;
 				}
 				else if (c)
 					msgAnalyzer(*c, buffer);
 			}
 		}
 	}
-
-	std::cout << "Sono uscito dal run" << std::endl;
-
 	// DESTRUCTOR CALL
 
-		// DELETE BOT
+	// DELETE BOT
 	_clients.erase(SUPERCHANNEL);
 
 	for(std::list<Client*>::iterator it = _clientsNotRegistered.begin(); it != _clientsNotRegistered.end(); ++it)
@@ -434,7 +429,7 @@ void Server::sendToAllClients(const std::string &msg)
 
 void	Server::status()
 {
-	if (!_clientsNotRegistered.size())
+	if (_clientsNotRegistered.size())
 		std::cout << "LIST NOT REGISTERED" << std::endl;
 
 	for (std::list<Client *>::iterator it = _clientsNotRegistered.begin(); it != _clientsNotRegistered.end(); ++it)

@@ -54,7 +54,10 @@ bool Channel::isInvited(Client *client) const
 
 void Channel::removeFromInvited(Client *client)
 {
-	_invitedClients.erase(std::find(_invitedClients.begin(), _invitedClients.end(), client));
+	if (!client)
+		return;
+	if (isInvited(client))
+		_invitedClients.erase(std::find(_invitedClients.begin(), _invitedClients.end(), client));
 }
 
 void Channel::setInviteOnly(bool plus, Client &client)
@@ -214,18 +217,13 @@ void Channel::sendToAll(const std::string &msg) const
 
 void	Channel::updateNickInChannel(const std::string &old, const std::string &newName)
 {
-	std::cout << "UPDATE NICK IN CHANNEL CALLED" << std::endl;
 	if (!findClient(old))
-	{
-		std::cout << "NO CLIENT IN CHANNEL" << std::endl;
 		return;
-	}
 
 	Client * tmp = NULL;
 
 	if (_clients.find(old) != _clients.end())
 	{
-		std::cout << "NO OPERATOR" << std::endl;
 		tmp = _clients[old];
 		_clients.erase(old);
 		_clients[newName] = tmp;
@@ -233,13 +231,11 @@ void	Channel::updateNickInChannel(const std::string &old, const std::string &new
 	}
 	if (_clientsOp.find(old) != _clientsOp.end())
 	{
-		std::cout << "OPERATOR" << std::endl;
 		tmp = _clientsOp[old];
 		_clientsOp.erase(old);
 		_clientsOp[newName] = tmp;
 		return;
 	}
-	std::cout << "FIND NOT WORKING" << std::endl;
 }
 
 void	Channel::deleteClientFromChannel(const std::string &nick)
@@ -252,8 +248,7 @@ void	Channel::deleteClientFromChannel(const std::string &nick)
 		_clientsOp.erase(nick);
 	else
 		_clients.erase(nick);
-	if (isInvited(c))
-		removeFromInvited(c);
+	c->removeJoined(this);
 }
 
 std::vector<Client*>	Channel::getAllClients() const
