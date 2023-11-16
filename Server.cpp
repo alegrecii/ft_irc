@@ -4,6 +4,7 @@
 Server::Server(const std::string &port, const std::string &psw)
 : _port(portConverter(port)), _psw(psw), _fdCount(4), _isPassword(psw.compare("") != 0)
 {
+	srand(time(0));
 	_commands["JOIN"] = Command::join;
 	_commands["PRIVMSG"] = Command::privmsg;
 	_commands["PING"] = Command::ping;
@@ -186,9 +187,6 @@ void	Server::run()
 	{
 		int ready_fds = epoll_wait(epoll_fd, arrEvent, rlim.rlim_cur, -1); // Wait for events
 
-		if (ready_fds == -1)
-			perror("epoll_wait");
-
 		for (int i = 0; i < ready_fds; ++i)
 		{
 			if (arrEvent[i].data.fd == serverSocket)
@@ -362,15 +360,8 @@ void	Server::cmdAnalyzer(Client &client, std::vector<std::string> vParam)
 	vParam.erase(vParam.begin());
 
 	if ((it = _commands.find(cmd)) != _commands.end())
-	{
 		_commands[cmd](*this, client, vParam);
-	}
-	else
-	{
-		std::cout << "Unrecognized command" << std::endl;
-	}
 }
-
 void	Server::registration(Client &client, std::vector<std::string> vParam)
 {
 	std::string					cmd;

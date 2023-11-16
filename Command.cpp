@@ -1,5 +1,18 @@
 #include "Command.hpp"
 
+const std::string Command::_puns[10] = {
+	"«Mi rifiuto!» disse il netturbino.",
+	"Come si chiamano i boy-scout che vanno in macchina? Le giovani marmitte!",
+	"Abbiamo riso abbastanza, adesso pasta!",
+	"Se il cane ringhia, la ringhiera abbaia?!",
+	"Le natiche degli eschimesi sono IGLOOTEI",
+	"«Un uomo entra in un caffè». SPLASH",
+	"La funga dice al fungo: «Sei un porcino!»",
+	"Due mandarini litigano furiosamente e uno dice all'altro: «guarda che ti spicchio!!»",
+	"Discorso tra pecore: «Stasera non riesco a dormire». «Prova a contare i pastori....»",
+	"Qual è la pianta più puzzolente? Quella dei piedi!"
+};
+
 void	Command::status(Server &server, Client &client, std::vector<std::string> &v)
 {
 	(void)client;
@@ -215,6 +228,34 @@ void	Command::msgToClient(Server &s, Client &c, const std::string &targetClient,
 	send(cl->getFd(), MSG.c_str(), MSG.size(), MSG_DONTWAIT | MSG_NOSIGNAL);
 }
 
+void	Command::bot(Server &s, Channel *channel, const std::string &msg)
+{
+	if (channel->getName().compare(SUPERCHANNEL))
+		return ;
+	std::string	cmd = toLowerString( msg );
+	std::string	toSend;
+
+	if (!cmd.compare("!manu"))
+	{
+		toSend = "try these commands !manu <command> :\ndaii \neddaii \nbattuta";
+		msgToChannel(s, *(channel->findClient("Manuel")), channel->getName() ,toSend);
+		return;
+	}
+	if(cmd.compare(0, 6, "!manu "))
+		return;
+	cmd.erase(0, 6);
+
+	if (!cmd.compare("daii"))
+		toSend = "DAIIIIIII";
+	else if (!cmd.compare("eddaii"))
+		toSend = "EDDAIIIIIII";
+	else if (!cmd.compare("battuta"))
+		toSend = _puns[rand()%10];
+	else
+		toSend = "Non conosco que, c'ho piacere";
+	msgToChannel(s, *(channel->findClient("Manuel")), channel->getName() ,toSend);
+}
+
 void	Command::msgToChannel(Server &s, Client &c, const std::string &chName, const std::string &msg)
 {
 	Channel	*ch = s.getChannel(chName);
@@ -242,6 +283,8 @@ void	Command::msgToChannel(Server &s, Client &c, const std::string &chName, cons
 			send(allClients[i]->getFd(), MSG_CHANNEL.c_str(), MSG_CHANNEL.size(), MSG_DONTWAIT | MSG_NOSIGNAL);
 		}
 	}
+	//BOT
+	Command::bot(s, ch, msg);
 }
 
 void	Command::privmsg(Server &server, Client &client, std::vector<std::string> &v)

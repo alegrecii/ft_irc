@@ -1,6 +1,6 @@
 #include "Client.hpp"
 
-Client::Client() : _fd(-1), _isRegister(true), _passTaken(true), _nickname("PALLE"), _user("Palle"), _startReg(time(0))
+Client::Client() : _fd(-1), _isRegister(true), _passTaken(true), _nickname("Manuel"), _user("mdi-paol"), _startReg(time(0))
 {
 }
 

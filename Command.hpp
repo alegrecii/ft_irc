@@ -12,6 +12,8 @@ private:
 	Command();
 	~Command();
 
+	static const std::string	_puns[10];
+
 	static void			msgToChannel(Server &s, Client &c, const std::string &chName, const std::string &msg);
 	static void			msgToClient(Server &s, Client &c, const std::string &targetClient, const std::string &msg);
 
@@ -20,6 +22,7 @@ private:
 	static void			sendJoin(Channel &channel, Client &client);
 
 public:
+
 	static void			status(Server &server, Client &client, std::vector<std::string> &v);
 	static void			user(Server &server, Client &client, std::vector<std::string> &v);
 	static void			pass(Server &server, Client &client, std::vector<std::string> &v);
@@ -35,6 +38,7 @@ public:
 	static void			who(Server &server, Client &client, std::vector<std::string> &v);
 	static void			userhost(Server &server, Client &client, std::vector<std::string> &v);
 	static void			help(Server &server, Client &client, std::vector<std::string> &v);
-	//static void			bot(Server &server, Client &client, std::vector<std::string> &v);
+
+	static void			bot(Server &s, Channel *channel, const std::string &msg);
 
 };
