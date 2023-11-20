@@ -137,16 +137,13 @@ void	Server::deleteChannel(const std::string &chName)
 
 void	Server::run()
 {
-	signal(SIGINT, sigHandler);
-	int serverSocket, newSocket;
-	struct sockaddr_in serverAddr, newAddr;
-	socklen_t addrSize;
-	char buffer[512];
-	struct rlimit rlim;
+	int					serverSocket, newSocket;
+	char				buffer[512];
+	socklen_t			addrSize;
+	struct sockaddr_in	serverAddr, newAddr;
 
-	memset(&rlim, 0, sizeof(rlimit));
-	if (getrlimit(RLIMIT_NOFILE, &rlim) == -1) // max open fd
-		rlim.rlim_cur = 1024;
+	signal(SIGINT, sigHandler);
+
 	memset(&serverAddr, 0, sizeof(sockaddr_in));
 	memset(&newAddr, 0, sizeof(sockaddr_in));
 	memset(&addrSize, 0, sizeof(socklen_t));
@@ -181,11 +178,12 @@ void	Server::run()
 	if (epoll_ctl(epoll_fd, EPOLL_CTL_ADD, serverSocket, &event) == -1) // Add the server socket to the epoll
 		throw (std::runtime_error("epoll_ctl"));
 	_fdCount++;
-	struct epoll_event arrEvent[rlim.rlim_cur]; // Create an event array to store events
+
+	struct epoll_event arrEvent[MAX_CLIENTS]; // Create an event array to store events
 
 	while (running)
 	{
-		int ready_fds = epoll_wait(epoll_fd, arrEvent, rlim.rlim_cur, -1); // Wait for events
+		int ready_fds = epoll_wait(epoll_fd, arrEvent, MAX_CLIENTS, -1); // Wait for events
 
 		for (int i = 0; i < ready_fds; ++i)
 		{
@@ -193,7 +191,7 @@ void	Server::run()
 			{
 				if ((newSocket = accept(serverSocket, (struct sockaddr*)&newAddr, &addrSize)) == -1)
 					continue;
-				else if(_fdCount  >= rlim.rlim_cur - 1)
+				else if(_fdCount  >= MAX_CLIENTS - 1)
 				{
 					send(newSocket, ":ircserv QUIT :The server is full!\r\n", 37, MSG_DONTWAIT | MSG_NOSIGNAL);
 					send(newSocket, "", 0, MSG_DONTWAIT | MSG_NOSIGNAL);
