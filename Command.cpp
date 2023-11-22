@@ -143,6 +143,8 @@ void	Command::setChannels(Server &server, const std::string &chName, const std::
 	}
 	else
 	{
+		if (ch->findClient(client.getNickname()))
+			return;
 		if (!ch->getPasskey().compare("") || !ch->getPasskey().compare(pass))
 		{
 			if (ch->getLimit() <= 0 || ch->getLimit() > static_cast<int>(ch->getSize()))

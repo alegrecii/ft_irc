@@ -340,10 +340,16 @@ void	Server::welcomeMessage(Client &client)
 	std::string RPL_WELCOME = serverName + " 001 " + client.getNickname() + " :Welcome to the 42 Internet Relay Network " + client.getNickname() + "\r\n";
 	std::string RPL_YOURHOST = serverName + " 002 " + client.getNickname() + " :Hosted by Ale, Dami, Manu\r\n";
 	std::string RPL_CREATED = serverName + " 003 " + client.getNickname() + " :This server was created in Nidavellir\r\n";
+	std::string RPL_MYINFO = serverName + " 004 " + client.getNickname() + " ircserv 2.0 * +i+k+l+o+t\r\n";
+	std::string RPL_MOTD = ":ircserv 372 " + client.getNickname() + " :DAIII\r\n";
+	std::string RPL_ENDOFMOTD = ":ircserv 376 " + client.getNickname() + " ::)\r\n";
 
 	send(client.getFd(), RPL_WELCOME.c_str(), RPL_WELCOME.length(), flags);
 	send(client.getFd(), RPL_YOURHOST.c_str(), RPL_YOURHOST.length(), flags);
 	send(client.getFd(), RPL_CREATED.c_str(), RPL_CREATED.length(), flags);
+	send(client.getFd(), RPL_MYINFO.c_str(), RPL_MYINFO.length(), flags);
+	send(client.getFd(), RPL_MOTD.c_str(), RPL_MOTD.length(), flags);
+	send(client.getFd(), RPL_ENDOFMOTD.c_str(), RPL_ENDOFMOTD.length(), flags);
 }
 
 void	Server::cmdAnalyzer(Client &client, std::vector<std::string> vParam)
